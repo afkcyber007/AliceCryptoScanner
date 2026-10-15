@@ -1,0 +1,141 @@
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <h1>Every market scored from 0 to 100, live.</h1>
+      <p class="lead">Alice scans crypto, forex, gold, indices and US stocks on every timeframe and shows you which ones are trending, breaking out or turning. Use it free in your browser, on Android or on iPhone, with one account.</p>
+      <div class="hero-actions">
+        <a class="btn btn-gold" href="{{base}}app/">Open the web app</a>
+        <a class="btn btn-line" href="{{base}}download/">{{icon_android}}Get the Android app</a>
+      </div>
+      <p class="hero-note">
+        <span>{{icon_check}}Free plan, no card needed</span>
+        <span>{{icon_check}}Works on iPhone as an app</span>
+        <span>{{icon_check}}Same account everywhere</span>
+      </p>
+    </div>
+    <div class="board" id="live-board" aria-live="polite">
+      <div class="board-head">
+        <span class="board-title">Live market board</span>
+        <span class="live-dot off" id="board-status">Connecting</span>
+      </div>
+      <div class="mood">
+        <span class="mood-num" id="mood-num">--</span>
+        <span class="mood-label" id="mood-label">Market mood</span>
+        <div class="track"><i id="mood-mark" style="left:50%"></i></div>
+      </div>
+      <div class="quotes" id="board-quotes">
+        <div class="quote"><small>BTC/USDT</small><b>--</b><span>&nbsp;</span></div>
+        <div class="quote"><small>Gold</small><b>--</b><span>&nbsp;</span></div>
+        <div class="quote"><small>EUR/USD</small><b>--</b><span>&nbsp;</span></div>
+      </div>
+      <div class="board-head">
+        <span class="muted" style="font-size:14px">Strongest setups right now</span>
+        <div class="board-tabs" role="group" aria-label="Market">
+          <button type="button" data-market="crypto" aria-pressed="true">Crypto</button>
+          <button type="button" data-market="forex" aria-pressed="false">Forex</button>
+          <button type="button" data-market="commodities" aria-pressed="false">Gold</button>
+        </div>
+      </div>
+      <ul class="setups" id="board-setups">
+        <li><span class="sym">Loading the scanner&hellip;</span><span></span></li>
+      </ul>
+      <div class="board-foot">
+        <span id="board-time">Scores update every few minutes</span>
+        <a href="{{base}}scanner/">Full scanner</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="app">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>The whole trading app, in your pocket and your browser</h2>
+      <p>Everything below works in the Android app and in the web app. On iPhone, add the web app to your home screen and it opens full screen like any other app.</p>
+    </div>
+    <div class="screens">
+      <figure><img src="{{base}}static/img/screens/home.webp" width="520" height="1009" alt="Alice home screen with prices, gold and BTC analysis and the market pulse" loading="lazy"><figcaption><b>Home</b><span>Prices, market pulse and discussion rooms</span></figcaption></figure>
+      <figure><img src="{{base}}static/img/screens/scanner.webp" width="520" height="1009" alt="Market scanner with scores from 0 to 100" loading="lazy"><figcaption><b>Scanner</b><span>Every pair scored on any timeframe</span></figcaption></figure>
+      <figure><img src="{{base}}static/img/screens/best.webp" width="520" height="1009" alt="Best Trades list with entry, stop and targets" loading="lazy"><figcaption><b>Best Trades</b><span>Ranked setups with entry, stop and targets</span></figcaption></figure>
+      <figure><img src="{{base}}static/img/screens/gold.webp" width="520" height="1009" alt="Gold deep analysis verdict" loading="lazy"><figcaption><b>Gold and BTC analysis</b><span>Dollar, yields, news and history in one verdict</span></figcaption></figure>
+      <figure><img src="{{base}}static/img/screens/hours.webp" width="520" height="1009" alt="Forex sessions and crypto peak hours" loading="lazy"><figcaption><b>Market hours</b><span>Forex sessions and crypto peak hours</span></figcaption></figure>
+      <figure><img src="{{base}}static/img/screens/tools.webp" width="520" height="1009" alt="Pro trading tools" loading="lazy"><figcaption><b>Pro tools</b><span>AI chart analyzer, whale radar, Fibonacci, risk</span></figcaption></figure>
+      <figure><img src="{{base}}static/img/screens/academy.webp" width="520" height="1009" alt="Trading academy lessons" loading="lazy"><figcaption><b>Academy</b><span>Lessons from beginner to pro</span></figcaption></figure>
+      <figure><img src="{{base}}static/img/screens/spin.webp" width="520" height="1009" alt="Spin and earn coins" loading="lazy"><figcaption><b>Spin and earn</b><span>Collect coins and turn them into Premium</span></figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>What Alice does for you</h2>
+      <p>Built for traders who want a clear read of the market in seconds, not another screen full of indicators.</p>
+    </div>
+    <div class="feature-cols">
+      <div class="feature"><span class="ic">{{icon_radar}}</span><div><h3>Market scanner</h3><p>Trend, momentum, volume, structure, breakouts and the higher timeframe combined into one score from 0 to 100.</p></div></div>
+      <div class="feature"><span class="ic">{{icon_trophy}}</span><div><h3>Best Trades</h3><p>The highest-scoring setups across crypto, forex, stocks, indices and gold, with entry, stop loss and two targets.</p></div></div>
+      <div class="feature"><span class="ic">{{icon_gold}}</span><div><h3>Gold and BTC deep analysis</h3><p>Technicals on every timeframe, the dollar, yields, upcoming events and headlines, combined into a daily verdict.</p></div></div>
+      <div class="feature"><span class="ic">{{icon_ai}}</span><div><h3>AI chart analyzer</h3><p>Upload a chart screenshot or pick a pair and get trend, levels, patterns and a trade idea in plain words.</p></div></div>
+      <div class="feature"><span class="ic">{{icon_bell}}</span><div><h3>Smart alerts</h3><p>Price, RSI, breakout, volume spike and trend-change alerts, checked by our server around the clock.</p></div></div>
+      <div class="feature"><span class="ic">{{icon_whale}}</span><div><h3>Whale and unusual activity</h3><p>Large orders, sudden pumps and dumps, accumulation and new listings as they happen.</p></div></div>
+      <div class="feature"><span class="ic">{{icon_clock}}</span><div><h3>Market hours</h3><p>Forex sessions and overlaps in your own time zone, plus the busiest and quietest hours for crypto.</p></div></div>
+      <div class="feature"><span class="ic">{{icon_chat}}</span><div><h3>Discussion rooms</h3><p>Live crypto and forex rooms with moderation, so you can share ideas with other traders.</p></div></div>
+      <div class="feature"><span class="ic">{{icon_book}}</span><div><h3>Trading academy</h3><p>Forex, crypto, gold and smart money concepts explained step by step with chart examples.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Free trading tools</h2>
+      <p>No account needed. Each calculator runs in your browser and works on any phone.</p>
+    </div>
+    <div class="tool-list">
+{{tool_links}}
+    </div>
+  </div>
+</section>
+
+{{ad_home}}
+
+<section class="section" id="pricing">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Start free, upgrade when it pays for itself</h2>
+      <p>Premium and Elite unlock every market, every timeframe and the pro tools. Pay with USDT or Bitcoin on the website, or with Google Play in the Android app.</p>
+    </div>
+{{plans}}
+  </div>
+</section>
+
+<section class="section" id="download">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Use Alice on any device</h2>
+      <p>Your account, plan, alerts and coins are the same on the website, Android and iPhone.</p>
+    </div>
+{{downloads}}
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Learn to read the market</h2>
+      <p>Clear guides on forex, crypto and gold trading, written for real traders.</p>
+    </div>
+    <div class="post-list">
+{{latest_posts}}
+    </div>
+    <p style="margin-top:24px"><a class="btn btn-line" href="{{base}}learn/">All guides</a></p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head"><h2>Questions traders ask us</h2></div>
+{{faq}}
+  </div>
+</section>

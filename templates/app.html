@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Alice web app: crypto, forex and gold scanner</title>
+<meta name="description" content="The Alice Forex/Crypto Scanner in your browser: live scanner scores, Best Trades, Gold and BTC deep analysis, AI chart analyzer, alerts and pro trading tools. Install it on iPhone from Safari.">
+<link rel="canonical" href="{{canonical}}">
+<meta name="theme-color" content="#0A0E17">
+<meta property="og:title" content="Alice web app">
+<meta property="og:description" content="Crypto, forex and gold scanner with Best Trades, deep analysis and pro tools.">
+<meta property="og:image" content="{{og_image}}">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="{{base}}static/img/logo-mark.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="{{base}}static/img/icons/apple-touch-icon.png">
+<link rel="manifest" href="{{base}}manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Alice Scanner">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="{{api}}" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Sora:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="{{base}}assets/css/main.css?v={{v}}">
+<link rel="stylesheet" href="{{base}}assets/css/app.css?v={{v}}">
+{{ads_head}}
+<script>
+window.ALICE = { api: "{{api}}", base: "{{base}}", site: "{{site_url}}", play: "{{play_url}}", ios: "{{ios_url}}", tg: "{{tg}}", v: "{{v}}",
+  slots: { app: {{slot_app}}, spin: {{slot_spin}} } };
+</script>
+</head>
+<body class="in-app">
+<div class="app" id="app">
+  <aside class="side" aria-label="Main menu">
+    <a class="brand" href="{{base}}" title="AliceCryptoScanner website"><img src="{{base}}static/img/logo-mark.svg" alt="" width="34" height="34"><span class="brand-word">Alice<b>CryptoScanner</b></span></a>
+    <nav class="side-nav" id="side-nav"></nav>
+    <div class="side-foot" id="side-foot"></div>
+  </aside>
+  <div class="main">
+    <header class="topbar" id="topbar">
+      <button class="icon-btn back" id="back-btn" type="button" aria-label="Back" hidden></button>
+      <div class="top-title"><h1 id="top-title">Alice</h1><span id="top-sub"></span></div>
+      <div class="top-actions" id="top-actions"></div>
+    </header>
+    <div class="view" id="view" tabindex="-1"><div class="loading-screen"><img src="{{base}}static/img/logo-mark.svg" alt="" width="64" height="64"><span>Loading Alice&hellip;</span></div></div>
+    <div class="app-ad" id="app-ad" hidden></div>
+  </div>
+  <nav class="tabbar" id="tabbar" aria-label="Tabs"></nav>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div id="sheet-root"></div>
+<noscript><p style="padding:24px">Alice needs JavaScript to run. Please enable it in your browser settings.</p></noscript>
+<script type="module" src="{{base}}assets/js/app/main.js?v={{v}}"></script>
+</body>
+</html>

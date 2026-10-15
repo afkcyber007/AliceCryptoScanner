@@ -1,0 +1,14 @@
+<div class="tool-grid">
+  <form class="fields" onsubmit="return false">
+    <div class="field full"><label for="cv-amt">Amount</label><input id="cv-amt" name="amt" type="number" inputmode="decimal" min="0" step="any" value="100"></div>
+    <div class="field"><label for="cv-from">From</label><select id="cv-from" name="from"><option>USD</option></select></div>
+    <div class="field"><label for="cv-to">To</label><select id="cv-to" name="to"><option>EUR</option></select></div>
+    <div class="field full"><button type="button" class="btn btn-line btn-sm" data-swap>Swap currencies</button></div>
+  </form>
+  <div class="results" aria-live="polite">
+    <div class="result big"><span data-out="label">Converted</span><b data-out="result">--</b></div>
+    <div class="result"><span data-out="r1l">Rate</span><b data-out="r1">--</b></div>
+    <div class="result"><span data-out="r2l">Inverse rate</span><b data-out="r2">--</b></div>
+    <p class="tool-hint" data-out="note">Loading live rates</p>
+  </div>
+</div>

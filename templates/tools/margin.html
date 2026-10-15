@@ -1,0 +1,15 @@
+<div class="tool-grid">
+  <form class="fields" onsubmit="return false">
+    <div class="field"><label for="mg-pair">Instrument</label><select id="mg-pair" name="pair"><option>EURUSD</option><option>GBPUSD</option><option>USDJPY</option><option>USDCHF</option><option>AUDUSD</option><option>USDCAD</option><option>NZDUSD</option><option>EURGBP</option><option>EURJPY</option><option>GBPJPY</option><option>EURCHF</option><option>EURAUD</option><option>EURCAD</option><option>EURNZD</option><option>GBPCHF</option><option>GBPAUD</option><option>GBPCAD</option><option>GBPNZD</option><option>AUDJPY</option><option>AUDNZD</option><option>AUDCAD</option><option>AUDCHF</option><option>CADJPY</option><option>CHFJPY</option><option>NZDJPY</option><option>NZDCAD</option><option>CADCHF</option><option>USDZAR</option><option>USDMXN</option><option>USDTRY</option><option>XAUUSD</option><option>XAGUSD</option><option>BTCUSD</option><option>ETHUSD</option></select></div>
+    <div class="field"><label for="mg-acc">Account currency</label><select id="mg-acc" name="acc"><option>USD</option><option>EUR</option><option>GBP</option><option>AUD</option><option>CAD</option><option>CHF</option><option>JPY</option><option>NZD</option></select></div>
+    <div class="field"><label for="mg-lots">Lot size</label><input id="mg-lots" name="lots" type="number" inputmode="decimal" min="0" step="any" value="1"></div>
+    <div class="field"><label for="mg-lev">Leverage (1:x)</label><input id="mg-lev" name="lev" type="number" inputmode="decimal" min="1" step="any" value="100"></div>
+    <div class="field full"><label for="mg-price">Current price</label><input id="mg-price" name="price" type="number" inputmode="decimal" min="0" step="any" placeholder="Loading live price"></div>
+  </form>
+  <div class="results" aria-live="polite">
+    <div class="result big"><span>Margin required</span><b data-out="margin">--</b></div>
+    <div class="result"><span>Position value</span><b data-out="notional">--</b></div>
+    <div class="result"><span>Contract size per lot</span><b data-out="contract">--</b></div>
+    <p class="tool-hint" data-out="note"></p>
+  </div>
+</div>

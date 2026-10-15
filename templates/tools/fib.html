@@ -1,0 +1,13 @@
+<div class="tool-grid">
+  <form class="fields" onsubmit="return false">
+    <div class="field full"><span class="lbl">The move you are measuring</span>
+      <div class="seg" role="group" aria-label="Trend" data-name="dir"><button type="button" data-v="up" aria-pressed="true">Uptrend (low to high)</button><button type="button" data-v="down" aria-pressed="false">Downtrend (high to low)</button></div></div>
+    <div class="field"><label for="fb-high">Swing high</label><input id="fb-high" name="high" type="number" inputmode="decimal" step="any" value="2450"></div>
+    <div class="field"><label for="fb-low">Swing low</label><input id="fb-low" name="low" type="number" inputmode="decimal" step="any" value="2300"></div>
+    <div class="field full"><label for="fb-price">Current price (optional)</label><input id="fb-price" name="price" type="number" inputmode="decimal" step="any" placeholder="Shows where price sits"></div>
+  </form>
+  <div class="results" aria-live="polite">
+    <table class="table" style="margin:0"><thead><tr><th>Level</th><th>Price</th></tr></thead><tbody data-out="table"></tbody></table>
+    <p class="tool-hint" data-out="note"></p>
+  </div>
+</div>

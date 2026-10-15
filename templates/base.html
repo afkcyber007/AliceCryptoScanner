@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{title}}</title>
+<meta name="description" content="{{description}}">
+<link rel="canonical" href="{{canonical}}">
+<meta name="robots" content="{{robots}}">
+<meta name="theme-color" content="#0A0E17">
+<meta property="og:type" content="{{og_type}}">
+<meta property="og:site_name" content="AliceCryptoScanner">
+<meta property="og:title" content="{{og_title}}">
+<meta property="og:description" content="{{description}}">
+<meta property="og:url" content="{{canonical}}">
+<meta property="og:image" content="{{og_image}}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{og_title}}">
+<meta name="twitter:description" content="{{description}}">
+<meta name="twitter:image" content="{{og_image}}">
+<link rel="icon" href="{{base}}static/img/logo-mark.svg" type="image/svg+xml">
+<link rel="icon" href="{{base}}static/img/icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="{{base}}static/img/icons/apple-touch-icon.png">
+<link rel="manifest" href="{{base}}manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Alice Scanner">
+<link rel="alternate" type="application/rss+xml" title="AliceCryptoScanner Learn" href="{{base}}learn/feed.xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Sora:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="{{base}}assets/css/main.css?v={{v}}">
+{{extra_css}}
+{{verification}}
+{{analytics}}
+{{ads_head}}
+<script>window.ALICE={api:"{{api}}",base:"{{base}}",site:"{{site_url}}",play:"{{play_url}}",ios:"{{ios_url}}",tg:"{{tg}}",v:"{{v}}"};</script>
+{{jsonld}}
+</head>
+<body class="{{body_class}}">
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header" id="top">
+  <div class="wrap">
+    <a class="brand" href="{{base}}" aria-label="AliceCryptoScanner home">
+      <img src="{{base}}static/img/logo-mark.svg" alt="" width="34" height="34">
+      <span class="brand-word">Alice<b>CryptoScanner</b></span>
+    </a>
+    <nav class="site-nav" id="site-nav" aria-label="Main">
+      <a href="{{base}}scanner/"{{nav_scanner}}>Live scanner</a>
+      <a href="{{base}}tools/"{{nav_tools}}>Free tools</a>
+      <a href="{{base}}learn/"{{nav_learn}}>Learn</a>
+      <a href="{{base}}pricing/"{{nav_pricing}}>Pricing</a>
+      <a href="{{base}}download/"{{nav_download}}>Download</a>
+    </nav>
+    <div class="header-cta">
+      <a class="btn btn-quiet btn-sm" href="{{base}}app/#/login">Log in</a>
+      <a class="btn btn-gold btn-sm" href="{{base}}app/">Open app</a>
+    </div>
+    <button class="menu-btn" type="button" aria-controls="site-nav" aria-expanded="false" aria-label="Menu">{{icon_menu}}</button>
+  </div>
+</header>
+<main id="main">
+{{body}}
+</main>
+{{ad_bottom}}
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-about">
+        <a class="brand" href="{{base}}"><img src="{{base}}static/img/logo-mark.svg" alt="" width="34" height="34"><span class="brand-word">Alice<b>CryptoScanner</b></span></a>
+        <p>A market scanner and trading toolkit for crypto, forex, gold, indices and US stocks. One account on the website, Android and iPhone.</p>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <ul>
+          <li><a href="{{base}}app/">Web app</a></li>
+          <li><a href="{{base}}scanner/">Live scanner</a></li>
+          <li><a href="{{base}}pricing/">Pricing</a></li>
+          <li><a href="{{base}}download/">Download</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Free tools</h4>
+        <ul>
+          <li><a href="{{base}}tools/position-size-calculator/">Position size calculator</a></li>
+          <li><a href="{{base}}tools/forex-market-hours/">Forex market hours</a></li>
+          <li><a href="{{base}}tools/pip-value-calculator/">Pip value calculator</a></li>
+          <li><a href="{{base}}tools/">All tools</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <ul>
+          <li><a href="{{base}}about/">About</a></li>
+          <li><a href="{{base}}contact/">Contact</a></li>
+          <li><a href="{{base}}privacy/">Privacy policy</a></li>
+          <li><a href="{{base}}terms/">Terms</a></li>
+          <li><a href="{{base}}disclaimer/">Risk disclaimer</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="foot-risk">Trading crypto, forex, CFDs and other leveraged products carries a high risk of losing money. Everything on AliceCryptoScanner is general market information and education, not financial advice or a recommendation to buy or sell. Past performance does not guarantee future results. &copy; {{year}} AliceCryptoScanner.</p>
+  </div>
+</footer>
+<script src="{{base}}assets/js/site.js?v={{v}}" defer></script>
+{{extra_js}}
+</body>
+</html>

@@ -1,0 +1,13 @@
+<div class="tool-grid">
+  <form class="fields" onsubmit="return false">
+    <div class="field full"><span class="lbl">Method</span>
+      <div class="seg" role="group" aria-label="Method" data-name="method"><button type="button" data-v="classic" aria-pressed="true">Classic</button><button type="button" data-v="fibonacci" aria-pressed="false">Fibonacci</button><button type="button" data-v="camarilla" aria-pressed="false">Camarilla</button><button type="button" data-v="woodie" aria-pressed="false">Woodie</button></div></div>
+    <div class="field"><label for="pp-h">Previous high</label><input id="pp-h" name="h" type="number" inputmode="decimal" step="any" value="1.0920"></div>
+    <div class="field"><label for="pp-l">Previous low</label><input id="pp-l" name="l" type="number" inputmode="decimal" step="any" value="1.0840"></div>
+    <div class="field"><label for="pp-c">Previous close</label><input id="pp-c" name="c" type="number" inputmode="decimal" step="any" value="1.0895"></div>
+    <div class="field"><label for="pp-o">Today's open (Woodie, optional)</label><input id="pp-o" name="o" type="number" inputmode="decimal" step="any"></div>
+  </form>
+  <div class="results" aria-live="polite">
+    <table class="table" style="margin:0"><thead><tr><th>Level</th><th>Price</th></tr></thead><tbody data-out="table"></tbody></table>
+  </div>
+</div>

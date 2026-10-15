@@ -1,0 +1,15 @@
+<div class="tool-grid">
+  <form class="fields" onsubmit="return false">
+    <div class="field"><label for="cc-start">Starting balance</label><input id="cc-start" name="start" type="number" inputmode="decimal" min="0" step="any" value="1000"></div>
+    <div class="field"><label for="cc-rate">Gain per period (%)</label><input id="cc-rate" name="rate" type="number" inputmode="decimal" step="any" value="5"></div>
+    <div class="field"><label for="cc-n">Number of periods</label><input id="cc-n" name="n" type="number" inputmode="numeric" min="1" max="600" step="1" value="12"></div>
+    <div class="field"><label for="cc-add">Add each period (optional)</label><input id="cc-add" name="add" type="number" inputmode="decimal" step="any" value="0"></div>
+  </form>
+  <div class="results" aria-live="polite">
+    <div class="result big"><span>Final balance</span><b data-out="final">--</b></div>
+    <div class="result"><span>Total profit</span><b data-out="profit">--</b></div>
+    <div class="result"><span>Total added</span><b data-out="added">--</b></div>
+    <div class="result"><span>Growth</span><b data-out="growth">--</b></div>
+  </div>
+</div>
+<div style="margin-top:20px;max-height:340px;overflow:auto"><table class="table" style="margin:0"><thead><tr><th>Period</th><th>Profit</th><th>Balance</th></tr></thead><tbody data-out="table"></tbody></table></div>

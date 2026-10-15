@@ -1,0 +1,16 @@
+<div class="tool-grid">
+  <form class="fields" onsubmit="return false">
+    <div class="field"><label for="pv-pair">Pair</label><select id="pv-pair" name="pair"><option>EURUSD</option><option>GBPUSD</option><option>USDJPY</option><option>USDCHF</option><option>AUDUSD</option><option>USDCAD</option><option>NZDUSD</option><option>EURGBP</option><option>EURJPY</option><option>GBPJPY</option><option>EURCHF</option><option>EURAUD</option><option>EURCAD</option><option>EURNZD</option><option>GBPCHF</option><option>GBPAUD</option><option>GBPCAD</option><option>GBPNZD</option><option>AUDJPY</option><option>AUDNZD</option><option>AUDCAD</option><option>AUDCHF</option><option>CADJPY</option><option>CHFJPY</option><option>NZDJPY</option><option>NZDCAD</option><option>CADCHF</option><option>USDZAR</option><option>USDMXN</option><option>USDTRY</option><option>XAUUSD</option><option>XAGUSD</option></select></div>
+    <div class="field"><label for="pv-acc">Account currency</label><select id="pv-acc" name="acc"><option>USD</option><option>EUR</option><option>GBP</option><option>AUD</option><option>CAD</option><option>CHF</option><option>JPY</option><option>NZD</option></select></div>
+    <div class="field"><label for="pv-lots">Lot size</label><input id="pv-lots" name="lots" type="number" inputmode="decimal" min="0" step="any" value="1"><small>1 = standard lot (100,000 units)</small></div>
+    <div class="field"><label for="pv-price">Current price</label><input id="pv-price" name="price" type="number" inputmode="decimal" min="0" step="any" placeholder="Loading live price"></div>
+  </form>
+  <div class="results" aria-live="polite">
+    <div class="result big"><span>Value of 1 pip</span><b data-out="pip">--</b></div>
+    <div class="result"><span>Per standard lot</span><b data-out="std">--</b></div>
+    <div class="result"><span>Per mini lot (0.1)</span><b data-out="mini">--</b></div>
+    <div class="result"><span>Per micro lot (0.01)</span><b data-out="micro">--</b></div>
+    <div class="result"><span>Pip size</span><b data-out="size">--</b></div>
+    <p class="tool-hint" data-out="note"></p>
+  </div>
+</div>

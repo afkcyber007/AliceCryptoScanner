@@ -1,0 +1,62 @@
+<div class="wrap">
+  <header class="page-head">
+    {{crumbs}}
+    <h1>Live market scanner</h1>
+    <p class="lead">The strongest bullish and bearish setups right now across crypto, forex, gold, indices and US stocks. Each market gets a score from 0 to 100, refreshed every few minutes.</p>
+  </header>
+
+  <div class="tool-box" id="scanner-page">
+    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div class="seg" role="group" aria-label="Market" id="scan-market">
+        <button type="button" data-v="crypto" aria-pressed="true">Crypto</button>
+        <button type="button" data-v="forex" aria-pressed="false">Forex</button>
+        <button type="button" data-v="commodities" aria-pressed="false">Gold and oil</button>
+        <button type="button" data-v="indices" aria-pressed="false">Indices</button>
+        <button type="button" data-v="stocks" aria-pressed="false">US stocks</button>
+      </div>
+      <div class="seg" role="group" aria-label="Timeframe" id="scan-tf">
+        <button type="button" data-v="1h" aria-pressed="true">1H</button>
+        <button type="button" data-v="4h" aria-pressed="false">4H</button>
+        <button type="button" data-v="1d" aria-pressed="false">1D</button>
+      </div>
+    </div>
+    <div class="tool-grid">
+      <div>
+        <h2 style="font-size:1.15rem;margin-bottom:10px" class="up">Most bullish</h2>
+        <ul class="setups" id="scan-bull"><li><span class="sym">Loading&hellip;</span><span></span></li></ul>
+      </div>
+      <div>
+        <h2 style="font-size:1.15rem;margin-bottom:10px" class="down">Most bearish</h2>
+        <ul class="setups" id="scan-bear"><li><span class="sym">Loading&hellip;</span><span></span></li></ul>
+      </div>
+    </div>
+    <div class="board-foot" style="margin-top:16px">
+      <span id="scan-status">Connecting to the scanner</span>
+      <a href="{{base}}app/#/scanner">Open the full scanner</a>
+    </div>
+  </div>
+
+  {{ad_top}}
+
+  <div class="layout">
+    <article class="prose">
+      <h2>How the score works</h2>
+      <p>Every market on the board is scored from 0 to 100 on the timeframe you choose. The score blends six things a trader would check by hand:</p>
+      <ul>
+        <li><strong>Trend</strong>: where price sits against the 9, 21, 50 and 200 period moving averages and whether they are stacked in order.</li>
+        <li><strong>Momentum</strong>: RSI, MACD and the stochastic oscillator.</li>
+        <li><strong>Volume</strong>: whether today's activity is above normal and who is in control, buyers or sellers.</li>
+        <li><strong>Structure</strong>: higher highs and higher lows, or lower highs and lower lows.</li>
+        <li><strong>Breakouts</strong>: fresh breaks of nearby support or resistance.</li>
+        <li><strong>Higher timeframe</strong>: whether the bigger picture agrees.</li>
+      </ul>
+      <p>Scores of 65 and above lean bullish, 35 and below lean bearish, and the middle is a range or a market without a clear direction. A high score means the conditions line up, not that price must keep going. Use it to decide <em>where to look</em>, then plan the trade with a stop loss and a position size you can afford.</p>
+      <h2>What you get in the full app</h2>
+      <p>The free board shows the top few markets on three timeframes. In the web app you can open any market to see its chart, support and resistance zones, Fibonacci levels, pivots, smart money concepts and a written analysis. Premium adds every timeframe from 1 minute to 1 month and every forex pair, index and US stock; Elite adds every crypto pair, Best Trades and the whale radar.</p>
+      <p><a class="btn btn-gold" href="{{base}}app/#/scanner">Open the full scanner</a></p>
+    </article>
+    <aside>
+      <div class="side-card"><b>Get alerts</b><p>Set price, RSI, breakout and trend alerts and let the server watch the market for you.</p><a class="btn btn-line btn-sm" href="{{base}}app/#/alerts">Create an alert</a></div>
+    </aside>
+  </div>
+</div>

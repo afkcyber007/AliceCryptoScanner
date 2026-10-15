@@ -1,0 +1,20 @@
+<div class="tool-grid">
+  <form class="fields" onsubmit="return false">
+    <div class="field full"><span class="lbl">Trade</span>
+      <div class="seg" role="group" aria-label="Direction" data-name="side"><button type="button" data-v="long" aria-pressed="true">Long (buy)</button><button type="button" data-v="short" aria-pressed="false">Short (sell)</button></div></div>
+    <div class="field"><label for="cp-inv">Amount invested (USD)</label><input id="cp-inv" name="inv" type="number" inputmode="decimal" min="0" step="any" value="1000"></div>
+    <div class="field"><label for="cp-lev">Leverage (1 = spot)</label><input id="cp-lev" name="lev" type="number" inputmode="decimal" min="1" step="any" value="1"></div>
+    <div class="field"><label for="cp-buy">Entry price</label><input id="cp-buy" name="entry" type="number" inputmode="decimal" min="0" step="any" value="60000"></div>
+    <div class="field"><label for="cp-sell">Exit price</label><input id="cp-sell" name="exit" type="number" inputmode="decimal" min="0" step="any" value="66000"></div>
+    <div class="field full"><label for="cp-fee">Trading fee per side (%)</label><input id="cp-fee" name="fee" type="number" inputmode="decimal" min="0" step="any" value="0.1"></div>
+  </form>
+  <div class="results" aria-live="polite">
+    <div class="result big"><span>Profit or loss</span><b data-out="pnl">--</b></div>
+    <div class="result"><span>Return on investment</span><b data-out="roi">--</b></div>
+    <div class="result"><span>Price move</span><b data-out="move">--</b></div>
+    <div class="result"><span>Position size</span><b data-out="qty">--</b></div>
+    <div class="result"><span>Fees paid</span><b data-out="fees">--</b></div>
+    <div class="result"><span>Value at exit</span><b data-out="final">--</b></div>
+    <p class="tool-hint" data-out="note"></p>
+  </div>
+</div>

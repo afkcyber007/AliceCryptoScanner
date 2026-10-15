@@ -1,0 +1,27 @@
+<div class="tool-grid">
+  <form class="fields" onsubmit="return false">
+    <div class="field full"><span class="lbl">Market</span>
+      <div class="seg" role="group" aria-label="Market" data-name="mode">
+        <button type="button" data-v="fx" aria-pressed="true">Forex and metals</button><button type="button" data-v="units" aria-pressed="false">Crypto and stocks</button>
+      </div></div>
+    <div class="field" data-show="fx"><label for="ps-pair">Pair</label><select id="ps-pair" name="pair"><option>EURUSD</option><option>GBPUSD</option><option>USDJPY</option><option>USDCHF</option><option>AUDUSD</option><option>USDCAD</option><option>NZDUSD</option><option>EURGBP</option><option>EURJPY</option><option>GBPJPY</option><option>EURCHF</option><option>EURAUD</option><option>EURCAD</option><option>EURNZD</option><option>GBPCHF</option><option>GBPAUD</option><option>GBPCAD</option><option>GBPNZD</option><option>AUDJPY</option><option>AUDNZD</option><option>AUDCAD</option><option>AUDCHF</option><option>CADJPY</option><option>CHFJPY</option><option>NZDJPY</option><option>NZDCAD</option><option>CADCHF</option><option>USDZAR</option><option>USDMXN</option><option>USDTRY</option><option>XAUUSD</option><option>XAGUSD</option></select></div>
+    <div class="field" data-show="fx"><label for="ps-acc">Account currency</label><select id="ps-acc" name="acc"><option>USD</option><option>EUR</option><option>GBP</option><option>AUD</option><option>CAD</option><option>CHF</option><option>JPY</option><option>NZD</option></select></div>
+    <div class="field"><label for="ps-bal">Account balance</label><input id="ps-bal" name="bal" type="number" inputmode="decimal" min="0" step="any" value="1000"></div>
+    <div class="field"><label for="ps-risk">Risk per trade (%)</label><input id="ps-risk" name="risk" type="number" inputmode="decimal" min="0" step="any" value="1"></div>
+    <div class="field" data-show="fx"><label for="ps-sl">Stop loss (pips)</label><input id="ps-sl" name="sl" type="number" inputmode="decimal" min="0" step="any" value="25"><small data-pipnote>1 pip = 0.0001</small></div>
+    <div class="field" data-show="fx"><label for="ps-price">Current price</label><input id="ps-price" name="price" type="number" inputmode="decimal" min="0" step="any" placeholder="Loading live price"><small>Filled with the live price, change it if you like</small></div>
+    <div class="field" data-show="units"><label for="ps-entry">Entry price</label><input id="ps-entry" name="entry" type="number" inputmode="decimal" min="0" step="any" value="65000"></div>
+    <div class="field" data-show="units"><label for="ps-stop">Stop loss price</label><input id="ps-stop" name="stop" type="number" inputmode="decimal" min="0" step="any" value="63700"></div>
+    <div class="field" data-show="units"><label for="ps-lev">Leverage (1 = spot)</label><input id="ps-lev" name="lev" type="number" inputmode="decimal" min="1" step="any" value="1"></div>
+  </form>
+  <div class="results" aria-live="polite">
+    <div class="result"><span>Amount at risk</span><b data-out="riskAmt">--</b></div>
+    <div class="result big"><span data-out="sizeLabel">Position size</span><b data-out="size">--</b></div>
+    <div class="result" data-show="fx"><span>Mini lots (0.1)</span><b data-out="mini">--</b></div>
+    <div class="result" data-show="fx"><span>Units</span><b data-out="units">--</b></div>
+    <div class="result" data-show="fx"><span>Pip value for this size</span><b data-out="pipv">--</b></div>
+    <div class="result" data-show="units"><span>Position value</span><b data-out="notional">--</b></div>
+    <div class="result" data-show="units"><span>Margin needed</span><b data-out="margin">--</b></div>
+    <p class="tool-hint" data-out="note"></p>
+  </div>
+</div>

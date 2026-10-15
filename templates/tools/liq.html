@@ -1,0 +1,17 @@
+<div class="tool-grid">
+  <form class="fields" onsubmit="return false">
+    <div class="field full"><span class="lbl">Position</span>
+      <div class="seg" role="group" aria-label="Direction" data-name="side"><button type="button" data-v="long" aria-pressed="true">Long</button><button type="button" data-v="short" aria-pressed="false">Short</button></div></div>
+    <div class="field"><label for="lq-entry">Entry price</label><input id="lq-entry" name="entry" type="number" inputmode="decimal" min="0" step="any" value="65000"></div>
+    <div class="field"><label for="lq-lev">Leverage</label><input id="lq-lev" name="lev" type="number" inputmode="decimal" min="1" step="any" value="10"></div>
+    <div class="field"><label for="lq-margin">Margin (USDT)</label><input id="lq-margin" name="margin" type="number" inputmode="decimal" min="0" step="any" value="100"></div>
+    <div class="field"><label for="lq-mmr">Maintenance margin (%)</label><input id="lq-mmr" name="mmr" type="number" inputmode="decimal" min="0" step="any" value="0.5"><small>Usually 0.4 to 1% on the biggest coins</small></div>
+  </form>
+  <div class="results" aria-live="polite">
+    <div class="result big"><span>Estimated liquidation price</span><b data-out="liq">--</b></div>
+    <div class="result"><span>Distance from entry</span><b data-out="dist">--</b></div>
+    <div class="result"><span>Position value</span><b data-out="notional">--</b></div>
+    <div class="result"><span>Size</span><b data-out="qty">--</b></div>
+    <p class="tool-hint" data-out="note"></p>
+  </div>
+</div>
