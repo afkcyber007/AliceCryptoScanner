@@ -65,7 +65,7 @@ body.in-app { font-size: 15.5px; line-height: 1.5; background: var(--bg); oversc
   .tabbar a i { display: grid; place-items: center; width: 52px; height: 28px; border-radius: 14px; font-style: normal; }
   .tabbar a.on { color: var(--text); }
   .tabbar a.on i { background: rgba(245,185,65,.16); color: var(--gold); }
-  .app-ad { margin-bottom: calc(76px + env(safe-area-inset-bottom)); }
+  #app-ad { margin-bottom: calc(76px + env(safe-area-inset-bottom)); }
 }
 .app-ad { text-align: center; padding: 8px 16px; border-top: 1px solid var(--line); background: #0C111C; }
 .app-ad::before { content: "Advertisement"; display: block; font-size: 11px; color: var(--faint); margin-bottom: 4px; }
@@ -472,3 +472,8 @@ body[data-lang="ur"] .li .t, body[data-lang="ur"] .li .s { line-height: 2; paddi
 @media (max-width: 480px) { .top-actions .lang-btn { display: none; } }
 .lang-chip { display: inline-flex; align-items: center; gap: 5px; height: 34px; padding: 0 10px; border-radius: 17px; border: 1px solid var(--line); background: var(--s1); color: var(--text); font-size: 12.5px; font-weight: 700; text-decoration: none; } .lang-chip svg { width: 16px; height: 16px; color: var(--gold); }
 [dir="rtl"] .up, [dir="rtl"] .down, [dir="rtl"] .qcard b, [dir="rtl"] .coin-pill { direction: ltr; unicode-bidi: isolate; } [dir="rtl"] .qcard span.up, [dir="rtl"] .qcard span.down { display: block; text-align: right; }
+/* extra banners for free users */
+.app-ad.top { border-top: 0; border-bottom: 1px solid var(--line); }
+.app-ad.inline { border: 0; background: transparent; padding: 0 16px 24px; }
+body.ad-sticky #app-ad { position: sticky; bottom: 0; z-index: 40; box-shadow: 0 -8px 24px rgba(0,0,0,.35); }
+@media (max-width: 999px) { body.ad-sticky #app-ad { bottom: calc(68px + env(safe-area-inset-bottom)); } }

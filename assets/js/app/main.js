@@ -144,13 +144,24 @@ function runScripts(box) {   // scripts inserted with innerHTML don't run, so re
   });
 }
 function updateAd() {
-  const slot = (A.slots && A.slots.app) || "";
-  const box = $("#app-ad");
   const ads = (session.config && session.config.ads) || {};
-  const show = slot && ads.enabled !== false && (!isPaid() || ads.paid_banner !== false) && !document.body.classList.contains("bare");
-  document.body.classList.toggle("has-ad", !!show);
-  if (!show) { box.hidden = true; box.innerHTML = ""; delete box.dataset.filled; return; }
-  if (!box.dataset.filled) { mountAd(box, slot); box.dataset.filled = "1"; }
+  const bare = document.body.classList.contains("bare");
+  const path = parseHash().path;
+  const free = !isPaid();
+  const on = ads.enabled !== false && !bare;
+  // bottom banner: free users always (sticky), Premium/Elite only when "paid_banner" is on (not sticky)
+  fill($("#app-ad"), (A.slots && A.slots.app) || "", on && (free || ads.paid_banner !== false));
+  // extra banners for FREE users only: under the top bar and at the end of each screen
+  const extra = on && free && !/^\/(chat|pay|upgrade|spin)/.test(path);
+  fill($("#app-ad-top"), (A.slots && A.slots.appTop) || "", extra);
+  fill($("#app-ad-inline"), (A.slots && A.slots.appInline) || "", extra);
+  document.body.classList.toggle("has-ad", !$("#app-ad").hidden);
+  document.body.classList.toggle("ad-sticky", free && !$("#app-ad").hidden && !/^\/chat/.test(path));
+}
+function fill(box, code, show) {
+  if (!box) return;
+  if (!show || !code) { box.hidden = true; return; }      // keep the loaded ad, just hide it
+  if (!box.dataset.filled) { mountAd(box, code); box.dataset.filled = "1"; }
   box.hidden = false;
 }
 let screensSinceAd = 0;

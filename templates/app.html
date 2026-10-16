@@ -27,7 +27,7 @@
 {{ads_head}}
 <script>
 window.ALICE = { api: "{{api}}", base: "{{base}}", site: "{{site_url}}", play: "{{play_url}}", ios: "{{ios_url}}", tg: "{{tg}}", v: "{{v}}",
-  slots: { app: {{slot_app}}, spin: {{slot_spin}}, interstitial: {{slot_interstitial}} }, channel: "{{channel}}" };
+  slots: { app: {{slot_app}}, appTop: {{slot_app_top}}, appInline: {{slot_app_inline}}, spin: {{slot_spin}}, interstitial: {{slot_interstitial}} }, channel: "{{channel}}" };
 </script>
 </head>
 <body class="in-app">
@@ -43,7 +43,9 @@ window.ALICE = { api: "{{api}}", base: "{{base}}", site: "{{site_url}}", play: "
       <div class="top-title"><h1 id="top-title">Alice</h1><span id="top-sub"></span></div>
       <div class="top-actions" id="top-actions"></div>
     </header>
+    <div class="app-ad top" id="app-ad-top" hidden></div>
     <div class="view" id="view" tabindex="-1"><div class="loading-screen"><img src="{{base}}static/img/logo-mark.svg" alt="" width="64" height="64"><span>Loading Alice&hellip;</span></div></div>
+    <div class="app-ad inline" id="app-ad-inline" hidden></div>
     <div class="app-ad" id="app-ad" hidden></div>
   </div>
   <nav class="tabbar" id="tabbar" aria-label="Tabs"></nav>

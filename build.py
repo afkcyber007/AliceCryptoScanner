@@ -824,6 +824,8 @@ def build_app() -> None:
                        "ios_url": esc(SITE.get("app_store_url", "")), "tg": esc(SITE.get("telegram_support", "")),
                        "ads_head": read(ROOT / "ads" / "head.html").strip(),
                        "slot_app": json.dumps(read(ROOT / "ads" / "slot-app.html").strip()).replace("</", "<\\/"),
+                       "slot_app_top": json.dumps(read(ROOT / "ads" / "slot-app-top.html").strip()).replace("</", "<\\/"),
+                       "slot_app_inline": json.dumps(read(ROOT / "ads" / "slot-app-inline.html").strip()).replace("</", "<\\/"),
                        "slot_spin": json.dumps(read(ROOT / "ads" / "slot-spin.html").strip()).replace("</", "<\\/"),
                        "slot_interstitial": json.dumps(read(ROOT / "ads" / "slot-interstitial.html").strip()).replace("</", "<\\/"),
                        "channel": esc(SITE.get("telegram_channel", "")),
@@ -833,12 +835,34 @@ def build_app() -> None:
     SITEMAP.append(("app/", TODAY.isoformat(), "0.7"))
 
 
+def build_android_ads() -> None:
+    """Ad pages loaded by the Android app (web ads such as Adsterra, used until/when AdMob has no ad).
+    a/banner.html ← ads/android-banner.html (Banner 320x50) · a/full.html ← ads/android-full.html (Banner 300x250).
+    A page is written only when its code is filled in; otherwise the app gets 404 and simply shows no web ad."""
+    pages = {"banner": ("android-banner.html", "#0000", "60px"), "full": ("android-full.html", "#0A0E17", "100vh")}
+    for name, (src, bg, h) in pages.items():
+        p = ROOT / "ads" / src
+        code = read(p).strip() if p.exists() else ""
+        target = OUT / "a" / f"{name}.html"
+        if not code:
+            continue
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(
+            '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+            '<meta name="viewport" content="width=device-width,initial-scale=1">'
+            '<meta name="robots" content="noindex,nofollow"><title>Ad</title>'
+            f'<style>html,body{{margin:0;padding:0;background:{"transparent" if name == "banner" else bg};overflow:hidden}}'
+            f'body{{min-height:{h};display:flex;align-items:center;justify-content:center}}</style></head>'
+            f'<body>{code}</body></html>\n', encoding="utf-8")
+
+
 def build_meta() -> None:
     entries = "".join(f"<url><loc>{url(p)}</loc><lastmod>{m}</lastmod><priority>{pr}</priority></url>" for p, m, pr in SITEMAP)
     (OUT / "sitemap.xml").write_text(
         f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{entries}</urlset>',
         encoding="utf-8")
     (OUT / "robots.txt").write_text(f"User-agent: *\nAllow: /\n\nSitemap: {url('sitemap.xml')}\n", encoding="utf-8")
+    build_android_ads()
     ads_txt = read(ROOT / "ads" / "ads.txt").strip()
     if ads_txt:
         (OUT / "ads.txt").write_text(ads_txt + "\n", encoding="utf-8")
