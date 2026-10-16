@@ -1,13 +1,13 @@
 ---
 title: Risk disclaimer
-description: Trading crypto, forex and CFDs carries a high risk of loss. AliceCryptoScanner provides market information and education, not financial advice.
+description: Trading crypto, forex and CFDs carries a high risk of loss. Alice Forex/Crypto Scanner provides market information and education, not financial advice.
 updated: 2026-10-15
 ---
 *Last updated: {{updated}}*
 
 ## Not financial advice
 
-Everything on AliceCryptoScanner, in the Alice Forex/Crypto Scanner app and in our Telegram channels, including scanner scores, Best Trades, deep analyses, AI analyses, alerts, articles, tools and discussion-room messages, is **general information and education only**. It is not investment, financial, legal or tax advice, and it is not a recommendation to buy, sell or hold any asset.
+Everything on the Alice Forex/Crypto Scanner website, in the web app, in the Android app and in our Telegram channels, including scanner scores, Best Trades, deep analyses, AI analyses, alerts, articles, tools and discussion-room messages, is **general information and education only**. It is not investment, financial, legal or tax advice, and it is not a recommendation to buy, sell or hold any asset.
 
 ## High risk
 

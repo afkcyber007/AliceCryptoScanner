@@ -10,6 +10,8 @@ The Relative Strength Index, or RSI, is one of the most popular indicators in tr
 
 ## What RSI measures
 
+![Bullish RSI divergence](img:edu/rsi_divergence.webp "RSI making a higher low while price makes a lower low: bullish divergence.")
+
 RSI was introduced by J. Welles Wilder in his 1978 book *New Concepts in Technical Trading Systems*. It compares the size of recent gains with the size of recent losses and turns the result into a number between 0 and 100.
 
 <span class="formula">RSI = 100 − 100 ÷ (1 + Average gain ÷ Average loss)</span>

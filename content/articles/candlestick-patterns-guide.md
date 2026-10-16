@@ -10,6 +10,8 @@ Candlestick charts are the default view on almost every trading platform, and fo
 
 ## How to read a candle
 
+![Head and shoulders reversal pattern](img:edu/head_shoulders.webp "Candles combine into bigger patterns such as the head and shoulders.")
+
 Every candle shows four prices for its period:
 
 - **Open**: the first price

@@ -10,6 +10,8 @@ Unlike stocks or forex, crypto never closes. You can buy Bitcoin at 3 a.m. on a 
 
 ## Crypto follows the world's working hours
 
+![Trading sessions in UTC](img:edu/daily_routine.webp "Volume follows the world's working hours: the Europe–US overlap is the busiest window.")
+
 Even though crypto is global and never sleeps, most trading is still done by people and institutions in Asia, Europe and North America during their working day. That creates three broad phases in UTC time:
 
 | UTC time | Who is active | Typical behaviour |

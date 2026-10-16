@@ -10,6 +10,8 @@ Some of the biggest moves in forex, gold and crypto happen in the minutes after 
 
 ## Reading the calendar
 
+![A trading day planned around news](img:edu/daily_routine.webp "Plan your day around the calendar: check event times before the session.")
+
 Each event on the calendar has:
 
 - **Time**, usually shown in your time zone or UTC

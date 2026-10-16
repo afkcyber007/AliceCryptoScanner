@@ -1,4 +1,4 @@
-/* AliceCryptoScanner service worker — version __VERSION__.
+/* Alice Forex/Crypto Scanner service worker — version __VERSION__.
    Pages: network first (always fresh), offline copy as fallback.
    Styles, scripts, images: cached by version.
    The Alice server (live prices, accounts, payments) is never cached. */
@@ -37,4 +37,36 @@ self.addEventListener("fetch", (e) => {
       return res;
     })));
   }
+});
+
+/* ---------------------------------------------------------------- push notifications from the Alice server */
+self.addEventListener("push", (e) => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (_) { d = { title: "Alice", body: e.data ? e.data.text() : "" }; }
+  const title = d.title || "Alice Forex/Crypto Scanner";
+  const opts = {
+    body: d.body || "", tag: d.tag || d.kind || "alice", renotify: true,
+    icon: BASE + "static/img/icons/icon-192.png", badge: BASE + "static/img/icons/badge-96.png",
+    data: { url: BASE + "app/#/" + String(d.route || "home").replace(/^\/+/, "") },
+    vibrate: [80, 40, 80],
+  };
+  e.waitUntil(self.registration.showNotification(title, opts));
+});
+
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  const url = (e.notification.data && e.notification.data.url) || BASE + "app/";
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+    for (const c of list) {
+      if (c.url.indexOf(BASE + "app/") !== -1 && "focus" in c) {
+        return c.focus().then((w) => { const win = w || c; return win.navigate ? win.navigate(url) : null; }).catch(() => {});
+      }
+    }
+    return self.clients.openWindow(url);
+  }));
+});
+
+self.addEventListener("pushsubscriptionchange", (e) => {
+  // The browser renewed the subscription: the web app re-registers it the next time it opens.
+  e.waitUntil(self.clients.matchAll({ type: "window" }).then((list) => list.forEach((c) => c.postMessage({ type: "resubscribe" }))));
 });

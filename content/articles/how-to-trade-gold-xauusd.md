@@ -10,6 +10,8 @@ Gold is one of the most traded markets in the world and one of the most popular 
 
 ## What XAU/USD means
 
+![Trend alignment with EMA 21, 50 and 200](img:art/ma_crossover.webp "Gold trends well: trade pullbacks while the moving averages are aligned.")
+
 XAU is the code for one troy ounce of gold, and USD is the US dollar. A price of 2,400 means one ounce costs $2,400. When you buy XAU/USD you profit if gold rises against the dollar; when you sell, you profit if it falls.
 
 Gold is traded as spot CFDs at forex brokers, as futures on exchanges such as COMEX, and through gold ETFs. This guide focuses on XAU/USD at a broker, the way most retail traders access it.

@@ -1,5 +1,5 @@
 /* Risk calculator pro: position size, margin, liquidation, fees and targets. Everything stays in the browser. */
-import { html, raw, cached, store, num, usd } from "../core.js";
+import { html, raw, cached, store, num, usd, isPaid, lockedPreview } from "../core.js";
 
 const PAIRS = ["EURUSD", "GBPUSD", "USDJPY", "USDCHF", "AUDUSD", "USDCAD", "NZDUSD", "EURGBP", "EURJPY", "GBPJPY", "EURCHF", "AUDJPY", "CADJPY", "CHFJPY", "EURAUD", "GBPAUD", "XAUUSD", "XAGUSD"];
 
@@ -46,9 +46,11 @@ export default async function risk(ctx) {
       const dist = long ? e - st : st - e;
       if (!(dist > 0)) { out.innerHTML = h + `<p class="err">${long ? "For a long, the stop goes below the entry." : "For a short, the stop goes above the entry."}</p>`; return; }
       const qty = riskAmt / dist, notional = qty * e, margin = notional / lev, fees = notional * fee * 2;
-      h += `<div class="result big"><span>Position size</span><b>${num(qty, qty >= 100 ? 2 : qty >= 1 ? 4 : 6)}</b></div>` + row("Position value", usd(notional)) + row(s.mode === "crypto" ? "Margin needed" : "Cost", usd(margin)) + row("Fees, in and out", usd(fees));
+      h += `<div class="result big"><span>Position size</span><b>${num(qty, qty >= 100 ? 2 : qty >= 1 ? 4 : 6)}</b></div>` + row("Position value", usd(notional)) + row(s.mode === "crypto" ? "Margin needed" : "Cost", usd(margin)) + (isPaid() ? row("Fees, in and out", usd(fees)) : "");
       if (margin > bal) h += `<p class="warn" style="margin:0">This needs more ${s.mode === "crypto" ? "margin" : "money"} than your balance. Lower the risk${s.mode === "crypto" ? " or raise the leverage carefully" : ""}.</p>`;
-      if (s.mode === "crypto") {
+      if (!isPaid()) {
+        h += String(lockedPreview("premium", "Pro: liquidation and fees", row("Estimated liquidation", "61,240.50", "down") + row("Fees, in and out", "$4.12")));
+      } else if (s.mode === "crypto") {
         const liq = long ? e * (1 - 1 / lev + 0.005) : e * (1 + 1 / lev - 0.005);
         const bad = long ? st <= liq : st >= liq;
         h += row("Estimated liquidation", num(liq, e >= 100 ? 2 : 5), "down") + (bad ? `<p class="err" style="margin:0">Your stop is beyond the liquidation price. Lower the leverage.</p>` : "");

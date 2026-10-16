@@ -10,6 +10,8 @@ Almost every trader who blows up an account had at least one idea that worked. W
 
 ## The 1% rule
 
+![Equity curves for 1%, 2% and 5% risk per trade](img:edu/equity_curves.webp "Same strategy, different risk per trade: higher risk means far deeper drawdowns.")
+
 The 1% rule says: **never risk more than 1% of your account on a single trade.** "Risk" means the amount you lose if your stop loss is hit, not the size of the position.
 
 With a $5,000 account, 1% is $50. Whether you trade EUR/USD with a 20-pip stop or Bitcoin with a $1,500 stop, you size the position so that being wrong costs about $50.

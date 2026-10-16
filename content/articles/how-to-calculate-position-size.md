@@ -10,6 +10,8 @@ Ask ten losing traders what went wrong and most will talk about entries: they bo
 
 This guide shows you how to calculate the right position size for every trade, with worked examples for forex, gold and crypto.
 
+![Stop loss below structure with an ATR buffer](img:art/stop_loss.webp "Place the stop first, then size the position from the stop distance.")
+
 ## The idea in one sentence
 
 You decide how much money you are willing to lose if the trade fails, you find where the trade fails (your stop loss), and you choose a size so that hitting the stop costs exactly that amount.

@@ -10,6 +10,8 @@ Every forex trader talks in pips. "The stop is 20 pips away", "GBP/USD moved 120
 
 ## What a pip is
 
+![Forex quote with bid, ask and spread](img:art/forex_quote.webp "A forex quote: the spread between bid and ask is measured in pips.")
+
 **Pip** stands for "percentage in point" or "price interest point". It is the standard unit for measuring how far an exchange rate has moved.
 
 - For most currency pairs, one pip is the **fourth decimal place**: 0.0001.

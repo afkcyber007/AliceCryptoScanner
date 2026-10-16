@@ -12,7 +12,8 @@ An empty file = no ad and no empty space on the website.
 | `slot-sidebar.html` | Right column next to articles on laptops / PCs (hidden on phones). |
 | `slot-bottom.html` | At the bottom of every page, above the footer. |
 | `slot-home.html` | On the home page between the tools list and the plans. |
-| `slot-app.html` | Banner inside the web app — only free users see it (Premium/Elite never see ads). |
+| `slot-app.html` | Small banner at the bottom of the web app. Free users always see it; Premium/Elite see it only while the Telegram setting `/ads paidbanner on` is on (same as the Android app). |
+| `slot-interstitial.html` | Full-screen ad in the web app — **free users only**, after every few screens (Telegram `/ads every`, `/ads gap`, `/ads first`, `/ads max` control it, same as the app). Empty = Alice shows its own “Go Premium” card instead. |
 | `slot-spin.html` | The "sponsored" box shown for 5 seconds before every Spin & Earn spin in the web app. |
 
 You can put code from different companies in different slots (for example AdSense in `slot-article.html`

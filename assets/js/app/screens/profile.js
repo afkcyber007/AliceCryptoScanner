@@ -1,6 +1,8 @@
 /* Profile, account settings, payments history, install and support. */
 import { A, API, html, raw, api, session, plan, refreshMe, int, date, toMs, go, skeleton, errorBox, toast, confirmSheet, icon, shareText, loadConfig, dropCache } from "../core.js";
 import { planName } from "../components.js";
+import { LANGS, lang, setLang } from "../i18n.js";
+import * as push from "../push.js";
 
 const row = (href, ic, label, extra = "", attrs = "") => html`<a class="li" href="${href}" ${raw(attrs)}><span class="with-ic"><span class="lead-ic">${ic}</span><span class="t">${label}</span></span><span class="r" style="display:flex;align-items:center;gap:6px">${extra}${icon.chev}</span></a>`;
 
@@ -29,14 +31,19 @@ export async function profile(ctx) {
       ${row("#/alerts", "🔔", "Alerts")}
       ${row("#/password", "🔑", "Change password")}
     </div></section>` : ""}
+    <section class="panel"><div class="panel-head"><h2>Settings</h2></div><div class="list">
+      ${row("#/notifications", "🔔", "Notifications", html`<span class="tag ${push.enabled() ? "bull" : ""}" style="margin-right:6px">${push.enabled() ? "On" : "Off"}</span>`)}
+      ${row("#/language", "🌐", "Language", html`<span class="note" style="margin-right:6px">${(LANGS.find((l) => l[0] === lang) || LANGS[0])[1]}</span>`)}
+    </div></section>
     <section class="panel"><div class="panel-head"><h2>Get the app</h2></div><div class="list">
       ${row("#/install", isIos ? "🍏" : "📲", isIos ? "Install on iPhone" : "Install Alice", html`<span class="note" style="margin-right:6px">${isIos ? "Home Screen" : "Android, iPhone, PC"}</span>`)}
     </div></section>
     <section class="panel"><div class="panel-head"><h2>Help and community</h2></div><div class="list">
       ${row(tg, "💬", "Telegram support", "", 'target="_blank" rel="noopener"')}
+      ${row(A.channel || "https://t.me/AliceCryptoPro_Official", "📣", "Daily analysis channel", html`<span class="tag gold" style="margin-right:6px">Telegram</span>`, 'target="_blank" rel="noopener"')}
       ${row("#/contact", "✉️", "Contact")}
-      <button type="button" class="li" data-share><span class="with-ic"><span class="lead-ic">📣</span><span class="t">Share Alice with a friend</span></span><span class="r">${icon.chev}</span></button>
-      ${row(A.base, "🌐", "AliceCryptoScanner website")}
+      <button type="button" class="li" data-share><span class="with-ic"><span class="lead-ic">🤝</span><span class="t">Share Alice with a friend</span></span><span class="r">${icon.chev}</span></button>
+      ${row(A.base, "🌐", "Alice Forex/Crypto Scanner website")}
     </div></section>
     <section class="panel"><div class="panel-head"><h2>Legal and privacy</h2></div><div class="list">
       ${row(A.base + "disclaimer/", "⚠️", "Risk disclaimer")}${row(A.base + "terms/", "📄", "Terms of use")}${row(A.base + "privacy/", "🔒", "Privacy policy")}
@@ -46,7 +53,7 @@ export async function profile(ctx) {
     <p class="note center">Alice web app, version ${A.v || "dev"}</p>`);
   ctx.on("[data-logout]", "click", async () => {
     if (!(await confirmSheet("Log out?", "You can log in again any time with your email and password.", "Log out"))) return;
-    session.clear(); dropCache(); toast("Logged out"); go("/home");
+    session.clear(); dropCache(); push.resync(); toast("Logged out"); go("/home");
   });
   ctx.on("[data-share]", "click", () => {
     const share = cfg.share || {};
@@ -151,4 +158,20 @@ export async function install(ctx) {
       <div class="btn-row">${apk ? html`<a class="btn btn-gold btn-sm" href="${apk}">${icon.download} Download the APK${share.version_name ? " " + share.version_name : ""}</a>` : html`<span class="btn btn-line btn-sm" aria-disabled="true">APK coming soon</span>`}
         ${play ? html`<a class="btn btn-line btn-sm" href="${play}" target="_blank" rel="noopener">Google Play</a>` : html`<span class="note">Google Play: coming soon</span>`}</div></section>
     <section class="panel"><div class="panel-head"><h2>💻 Laptop and PC</h2></div><p class="mt0" style="margin:0">Use Alice in Chrome, Edge, Safari or Firefox. In Chrome or Edge you can also click the install icon in the address bar to open Alice in its own window.</p></section>`);
+}
+
+/* ------------------------------------------------------------------ language (the same 10 as the app) */
+export async function language(ctx) {
+  ctx.top({ title: "Language", sub: "The app language" });
+  const draw = () => ctx.render(html`<section class="panel"><div class="list" data-notr>
+    ${LANGS.map(([code, name]) => html`<button type="button" class="li lang-row" data-lang="${code}" aria-pressed="${code === lang}"><span class="with-ic"><span class="lead-ic">${code.toUpperCase()}</span><span class="t">${name}</span></span><span class="r">${code === lang ? icon.check : ""}</span></button>`)}
+  </div></section><p class="note">Menus, buttons and screens change language. Market analyses, lessons and chat messages stay as written.</p>`);
+  ctx.on("[data-lang]", "click", async (e, b) => {
+    const l = b.dataset.lang;
+    await setLang(l);
+    if (session.loggedIn) await api("/api/me", { method: "PATCH", body: { language: l } }).then((r) => r && r.user && session.setUser(r.user)).catch(() => {});
+    await push.resync();
+    location.reload();
+  });
+  draw();
 }

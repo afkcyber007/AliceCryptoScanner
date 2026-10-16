@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Builds the AliceCryptoScanner website into the _site folder.
+"""Builds the Alice Forex/Crypto Scanner website into the _site folder.
 
 GitHub runs this automatically on every change (see .github/workflows/deploy.yml).
 To add an article: put a new .md file in content/articles (copy an existing one as a template).
@@ -88,6 +88,8 @@ ICONS = {
              '<path fill="#FFCE00" d="m16.8 8.6-3.4 3.4 3.4 3.4 3.8-2.2c.8-.5.8-1.7 0-2.2z"/><path fill="#FF3A44" '
              'd="M13.4 12 3.6 21.8c.3.2.8.2 1.2 0l12-6.4z"/><path fill="#00F076" d="M4.8 2.2c-.4-.2-.9-.2-1.2 0L13.4 12l3.4-3.4z"/></svg>'),
     "telegram": _svg('<path d="m22 3-20 8 7 2.5M22 3l-4 18-9-7.5M22 3 9 13.5v6l3.5-4"/>'),
+    "globe": _svg('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>'),
+    "lock": _svg('<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>'),
 }
 
 # --------------------------------------------------------------------------- tools
@@ -160,7 +162,16 @@ def ad(name: str, cls: str = "") -> str:
 def md_to_html(text: str) -> tuple[str, list[tuple[str, str]]]:
     m = markdown.Markdown(extensions=["tables", "toc", "attr_list", "sane_lists", "md_in_html"],
                           extension_configs={"toc": {"permalink": False, "toc_depth": "2"}})
+    text = text.replace("](img:", f"]({BASE}static/img/articles/")
     body = m.convert(text).replace("<table>", '<div class="table-wrap"><table>').replace("</table>", "</table></div>")
+    # images → <figure> with caption (from the markdown title), lazy loading and fixed aspect
+    def fig(mm: re.Match) -> str:
+        attrs = mm.group(1)
+        cap = re.search(r'title="([^"]*)"', attrs)
+        attrs = re.sub(r'\s*title="[^"]*"', "", attrs)
+        return (f'<figure class="fig"><img{attrs} loading="lazy" decoding="async">'
+                + (f"<figcaption>{cap.group(1)}</figcaption>" if cap else "") + "</figure>")
+    body = re.sub(r"<p>\s*<img([^>]*?)\s*/?>\s*</p>", fig, body)
     toc = [(t["id"], t["name"]) for t in getattr(m, "toc_tokens", [])]
     return body, toc
 
@@ -229,7 +240,7 @@ def crumbs_html(items: list[tuple[str, str]]) -> str:
     return f'<ol class="crumbs">{"".join(lis)}</ol>'
 
 
-ORG = {"@type": "Organization", "@id": url("#org"), "name": "AliceCryptoScanner", "url": url(),
+ORG = {"@type": "Organization", "@id": url("#org"), "name": "Alice Forex/Crypto Scanner", "url": url(),
        "logo": url("static/img/icons/icon-512.png"),
        "sameAs": [u for u in (SITE.get("telegram_channel"), SITE.get("twitter_url"), SITE.get("google_play_url")) if u]}
 
@@ -238,10 +249,55 @@ ORG = {"@type": "Organization", "@id": url("#org"), "name": "AliceCryptoScanner"
 VERSION = ""
 SITEMAP: list[tuple[str, str, str]] = []   # (path, lastmod, priority)
 
+# Website languages: the same 10 as the app. The home page is built once per language (/, /ur/, /hi/ …).
+SITE_LANGS = [("en", "English"), ("ur", "اردو"), ("hi", "हिन्दी"), ("ar", "العربية"), ("zh", "中文"),
+              ("es", "Español"), ("pt", "Português"), ("fr", "Français"), ("ru", "Русский"), ("tr", "Türkçe")]
+RTL_LANGS = {"ar", "ur"}
+LANG_FONTS = {"ur": "Noto+Nastaliq+Urdu:wght@400;600;700", "ar": "Noto+Sans+Arabic:wght@400;600;700",
+              "hi": "Noto+Sans+Devanagari:wght@400;600;700", "zh": "Noto+Sans+SC:wght@400;600;700"}
+_SITE_TR: dict[str, list[str]] = {}
+
+
+def site_tr() -> dict[str, list[str]]:
+    """Website translations: i18n-site/*.json, each entry "English": [ur, hi, ar, zh, es, pt, fr, ru, tr]."""
+    if not _SITE_TR:
+        for f in sorted((ROOT / "i18n-site").glob("*.json")):
+            for en, vals in json.loads(f.read_text(encoding="utf-8")).items():
+                if len(vals) != 9:
+                    raise SystemExit(f"{f.name}: '{en}' needs 9 translations, has {len(vals)}")
+                _SITE_TR[en] = vals
+    return _SITE_TR
+
+
+MISSING_TR: set[str] = set()
+
+
+def localize(text: str, lang: str) -> str:
+    """Replaces every [[English text]] marker with its translation (or the English text)."""
+    order = ["ur", "hi", "ar", "zh", "es", "pt", "fr", "ru", "tr"]
+    def rep(m: re.Match) -> str:
+        en = m.group(1)
+        if lang == "en":
+            return en
+        vals = site_tr().get(html.unescape(en))
+        if not vals:
+            MISSING_TR.add(en)
+            return en
+        return esc(vals[order.index(lang)])
+    return re.sub(r"\[\[(.+?)\]\]", rep, text, flags=re.S)
+
+
+def lang_home(lang: str) -> str:
+    return "" if lang == "en" else f"{lang}/"
+
+
+def app_url(lang: str = "en") -> str:
+    return f"{BASE}app/" + ("" if lang == "en" else f"?lang={lang}")
+
 
 def asset_version() -> str:
     h = hashlib.sha1()
-    for folder in ("assets", "templates"):
+    for folder in ("assets", "templates", "i18n", "i18n-site"):
         for p in sorted((ROOT / folder).rglob("*")):
             if p.is_file():
                 h.update(p.read_bytes())
@@ -251,7 +307,7 @@ def asset_version() -> str:
 def write_page(path: str, *, title: str, description: str, body: str, nav: str = "", jsonld: str = "",
                extra_js: str = "", extra_css: str = "", og_type: str = "website", robots: str = "index,follow",
                og_title: str = "", body_class: str = "", sitemap: tuple[str, str] | None = ("0.6", ""),
-               ad_bottom: bool = True) -> None:
+               ad_bottom: bool = True, lang: str = "en", alternates: str = "", og_image: str = "") -> None:
     ver = []
     if SITE.get("google_site_verification"):
         ver.append(f'<meta name="google-site-verification" content="{esc(SITE["google_site_verification"])}">')
@@ -263,16 +319,23 @@ def write_page(path: str, *, title: str, description: str, body: str, nav: str =
                  ) if ga else ""
     ctx = {
         "title": esc(title), "description": esc(description), "canonical": url(path), "robots": robots,
-        "og_type": og_type, "og_title": esc(og_title or title), "og_image": url("static/img/og-image.png"),
+        "og_type": og_type, "og_title": esc(og_title or title), "og_image": url(og_image or "static/img/og-image.png"),
         "base": BASE, "v": VERSION, "extra_css": extra_css, "extra_js": extra_js, "verification": "\n".join(ver),
         "analytics": analytics, "ads_head": read(ROOT / "ads" / "head.html").strip(), "api": API, "site_url": SITE_URL,
         "play_url": esc(SITE.get("google_play_url", "")), "ios_url": esc(SITE.get("app_store_url", "")),
         "tg": esc(SITE.get("telegram_support", "")), "jsonld": jsonld, "body": body, "year": TODAY.year,
         "body_class": body_class, "ad_bottom": f'<div class="wrap">{ad("slot-bottom")}</div>' if ad_bottom and ad("slot-bottom") else "",
+        "lang": lang, "dir": "rtl" if lang in RTL_LANGS else "ltr", "alternates": alternates, "app": app_url(lang),
+        "home": BASE + lang_home(lang), "channel": esc(SITE.get("telegram_channel", "")),
+        "lang_font": (f'<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family={LANG_FONTS[lang]}&display=swap">'
+                      if lang in LANG_FONTS else ""),
+        "lang_menu": "".join(f'<a href="{BASE}{lang_home(c)}" hreflang="{c}" lang="{c}"{" aria-current=\"true\"" if c == lang else ""}>{n}</a>'
+                             for c, n in SITE_LANGS),
+        "lang_code": lang.upper(),
     }
     for key in ("scanner", "tools", "learn", "pricing", "download"):
         ctx[f"nav_{key}"] = ' aria-current="page"' if nav == key else ""
-    html_out = render(read(TPL / "base.html"), ctx)
+    html_out = localize(render(read(TPL / "base.html"), ctx), lang)
     dest = OUT / path / "index.html" if not path.endswith(".html") else OUT / path
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_text(html_out, encoding="utf-8")
@@ -297,50 +360,52 @@ FREE_FEATURES = ["Scanner on the 1H, 4H and 1D timeframes", "Top 40 crypto pairs
                  "Discussion rooms, news and economic calendar", "Spin and earn coins toward Premium"]
 
 
-def plans_html() -> str:
+def plans_html(app: str = "") -> str:
+    app = app or f"{BASE}app/"
     def li(items):
-        return "".join(f"<li>{ICONS['check']}<span>{esc(x)}</span></li>" for x in items)
-    cards = [f'''<div class="plan"><h3>Free</h3><p class="muted" style="margin:0">For trying Alice and learning the market</p>
-  <div class="price">$0</div><div class="alt">Free forever</div><ul>{li(FREE_FEATURES)}</ul>
-  <a class="btn btn-line" href="{BASE}app/#/signup">Create a free account</a></div>''']
+        return "".join(f"<li>{ICONS['check']}<span>[[{esc(x)}]]</span></li>" for x in items)
+    cards = [f'''<div class="plan"><span class="plan-ic">🌱</span><h3>[[Free]]</h3><p class="muted" style="margin:0">[[For trying Alice and learning the market]]</p>
+  <div class="price">$0</div><div class="alt">[[Free forever]]</div><ul>{li(FREE_FEATURES)}</ul>
+  <a class="btn btn-line" href="{app}#/signup">[[Create a free account]]</a></div>''']
     for p in DEFAULT_PLANS:
         feat = p["id"] == "elite"
         save = round(100 - p["yearly"] / (p["monthly"] * 12) * 100)
-        cards.append(f'''<div class="plan{' featured' if feat else ''}" data-plan="{p['id']}">{'<span class="plan-tag">Most complete</span>' if feat else ''}<h3>{p['label']}</h3>
-  <p class="muted" style="margin:0">{'For traders who want the edge in every market' if feat else 'For active traders who want every market'}</p>
-  <div class="price" data-price="{p['id']}">${p['monthly']:.2f}<small> / month</small></div>
-  <div class="alt" data-alt="{p['id']}">or ${p['yearly']:.2f} a year, save {save}%</div>
+        cards.append(f'''<div class="plan{' featured' if feat else ' premium'}" data-plan="{p['id']}">{'<span class="plan-tag">[[Most complete]]</span>' if feat else '<span class="plan-tag blue">[[Most popular]]</span>'}<span class="plan-ic">{'👑' if feat else '⭐'}</span><h3>{p['label']}</h3>
+  <p class="muted" style="margin:0">{'[[For traders who want the edge in every market]]' if feat else '[[For active traders who want every market]]'}</p>
+  <div class="price" data-price="{p['id']}">${p['monthly']:.2f}<small> / [[month]]</small></div>
+  <div class="alt" data-alt="{p['id']}">[[or]] ${p['yearly']:.2f} [[a year]], [[save]] {save}%</div>
   <ul data-features="{p['id']}">{li(p['features'])}</ul>
-  <a class="btn {'btn-gold' if feat else 'btn-line'}" href="{BASE}app/#/upgrade?plan={p['id']}">Get {p['label']}</a></div>''')
+  <a class="btn {'btn-gold' if feat else 'btn-blue'}" href="{app}#/upgrade?plan={p['id']}">[[Get]] {p['label']}</a></div>''')
     return (f'<div class="plans">{"".join(cards)}</div>'
-            '<p class="pay-note">Website payments: USDT (TRC20 or BEP20) or Bitcoin, activated by our team after checking the '
-            'transaction, usually within a few hours. In the Android app you can also pay with Google Play.</p>')
+            '<p class="pay-note">[[Website payments: USDT (TRC20 or BEP20) or Bitcoin, activated by our team after checking the '
+            'transaction, usually within a few hours. In the Android app you can also pay with Google Play.]] '
+            '[[Or earn Premium free with coins from spins, referrals and partner exchanges.]]</p>')
 
 
 def downloads_html() -> str:
     play = SITE.get("google_play_url", "").strip()
     ios = SITE.get("app_store_url", "").strip()
-    play_block = (f'<a class="btn btn-line" href="{esc(play)}" rel="noopener">{ICONS["play"]}Open Google Play</a>' if play else
-                  '<span class="btn btn-line" aria-disabled="true">Coming soon</span>')
-    ios_block = (f'<a class="btn btn-line" href="{esc(ios)}" rel="noopener">{ICONS["apple"]}Open the App Store</a>' if ios else
-                 f'<a class="btn btn-gold" href="{BASE}app/">Open the web app</a>')
+    play_block = (f'<a class="btn btn-line" href="{esc(play)}" rel="noopener">{ICONS["play"]}[[Open Google Play]]</a>' if play else
+                  '<span class="btn btn-line" aria-disabled="true">[[Coming soon]]</span>')
+    ios_block = (f'<a class="btn btn-line" href="{esc(ios)}" rel="noopener">{ICONS["apple"]}[[Open the App Store]]</a>' if ios else
+                 f'<a class="btn btn-gold" href="{BASE}app/">[[Open the web app]]</a>')
     return f'''<div class="downloads">
   <div class="dl">
-    <div class="dl-head">{ICONS["android"]}<div><b>Android</b><span data-apk-version>Direct download (APK)</span></div></div>
-    <p>Download the latest version straight from our server. Your phone may ask you to allow installs from your browser the first time.</p>
-    <a class="btn btn-gold" data-apk-link href="{esc(API)}/download">{ICONS["download"]}Download the APK</a>
+    <div class="dl-head">{ICONS["android"]}<div><b>Android</b><span data-apk-version>[[Direct download (APK)]]</span></div></div>
+    <p>[[Download the latest version straight from our server. Your phone may ask you to allow installs from your browser the first time.]]</p>
+    <a class="btn btn-gold" data-apk-link href="{esc(API)}/download">{ICONS["download"]}[[Download the APK]]</a>
   </div>
   <div class="dl{'' if play else ' soon'}">
-    <div class="dl-head">{ICONS["play"]}<div><b>Google Play</b><span>{'Available now' if play else '<span class="badge-soon">In review</span>'}</span></div></div>
-    <p>{'Install from Google Play to get automatic updates and pay with your Google account.' if play else 'Alice is being reviewed by Google Play. The link will appear here as soon as it is live.'}</p>
+    <div class="dl-head">{ICONS["play"]}<div><b>Google Play</b><span>{'[[Available now]]' if play else '<span class="badge-soon">[[In review]]</span>'}</span></div></div>
+    <p>{'[[Install from Google Play to get automatic updates and pay with your Google account.]]' if play else '[[Alice is being reviewed by Google Play. The link will appear here as soon as it is live.]]'}</p>
     {play_block}
   </div>
   <div class="dl{'' if ios else ' soon'}">
-    <div class="dl-head">{ICONS["apple"]}<div><b>iPhone and iPad</b><span>{'App Store' if ios else '<span class="badge-soon">App Store coming soon</span>'}</span></div></div>
+    <div class="dl-head">{ICONS["apple"]}<div><b>[[iPhone and iPad]]</b><span>{'App Store' if ios else '<span class="badge-soon">[[App Store coming soon]]</span>'}</span></div></div>
     <ol class="ios-steps">
-      <li><span>Open <b>{esc(SITE_URL.replace("https://", ""))}{BASE}app</b> in Safari</span></li>
-      <li><span>Tap the Share button {ICONS["share"]}</span></li>
-      <li><span>Choose <b>Add to Home Screen</b> {ICONS["plus"]}</span></li>
+      <li><span>[[Open]] <b>{esc(SITE_URL.replace("https://", ""))}{BASE}app</b> [[in Safari]]</span></li>
+      <li><span>[[Tap the Share button]] {ICONS["share"]}</span></li>
+      <li><span>[[Choose]] <b>[[Add to Home Screen]]</b> {ICONS["plus"]}</span></li>
     </ol>
     {ios_block}
   </div>
@@ -348,7 +413,7 @@ def downloads_html() -> str:
 
 
 HOME_FAQ = [
-    ("Is AliceCryptoScanner free?", "Yes. The free plan includes the scanner on the 1H, 4H and 1D timeframes, the top crypto pairs and major forex pairs, alerts, the discussion rooms and every free tool on this website. Premium and Elite unlock every market, every timeframe and the pro tools."),
+    ("Is Alice Forex/Crypto Scanner free?", "Yes. The free plan includes the scanner on the 1H, 4H and 1D timeframes, the top crypto pairs and major forex pairs, alerts, the discussion rooms and every free tool on this website. Premium and Elite unlock every market, every timeframe and the pro tools."),
     ("Can I use Alice on iPhone?", "Yes. Open the web app in Safari, tap Share and choose Add to Home Screen. Alice then opens full screen from its own icon, like a normal app. A native App Store version is on the way."),
     ("Is my website account the same as my app account?", "Yes. Log in with the same email and password on the website, the Android app and iPhone. Your plan, alerts, coins and settings follow you."),
     ("How do I pay on the website?", "On the website you pay with USDT (TRC20 or BEP20) or Bitcoin. Send the exact amount shown, paste the transaction ID and add a screenshot. Our team checks the payment and activates your plan, usually within a few hours."),
@@ -361,6 +426,105 @@ def tool_links_html(exclude: str = "") -> str:
     return "\n".join(
         f'<a class="tool-link" href="{BASE}tools/{s}/"><span class="ic" aria-hidden="true">{e}</span><span><b>{esc(n)}</b><span>{esc(d)}</span></span></a>'
         for s, n, d, e, _ in TOOLS if s != exclude)
+
+
+# --------------------------------------------------------------------------- home page blocks (text in [[ ]] is translated)
+FREE_TOOLS = [  # emoji, name, description, app route
+    ("📡", "Market scanner", "1H, 4H and 1D timeframes, top 40 crypto pairs and major forex pairs", "#/scanner"),
+    ("🔔", "Price and RSI alerts", "4 alerts checked by our server around the clock", "#/alerts"),
+    ("🤖", "AI chart analyzer", "1 analysis a day: trend, levels and a trade idea", "#/ai"),
+    ("📐", "Fibonacci, pivots and levels", "Support and resistance, Fibonacci and pivot points", "#/fib"),
+    ("⏰", "Market hours and currency strength", "Forex sessions and crypto peak hours", "#/strength"),
+    ("📅", "Economic calendar and news", "High-impact events and market headlines", "#/calendar"),
+    ("💬", "Discussion rooms", "15 messages a day in the crypto and forex rooms", "#/chat/crypto"),
+    ("📔", "Journal and portfolio", "20 trades a month and 5 holdings", "#/journal"),
+    ("🧮", "Risk calculator", "Position size, lots and margin", "#/risk"),
+    ("🎡", "Spin and earn", "Daily spins and referral coins toward Premium", "#/spin"),
+]
+PRO_TOOLS = [  # emoji, name, description, tier, app route
+    ("🏆", "Best Trades", "Top setups in every market with entry, stop loss and two targets", "elite", "#/best"),
+    ("🥇", "Gold and BTC deep analysis", "Daily verdict and trade plan. 7-day free trial for everyone", "elite", "#/gold"),
+    ("🐋", "Whale and unusual activity radar", "Big orders, pumps, dumps and money flow with instant alerts", "elite", "#/activity"),
+    ("🌐", "Every market and timeframe", "All forex pairs, gold, oil, indices, US stocks and 1M to 1M", "premium", "#/scanner"),
+    ("🧭", "Multi-timeframe matrix", "15M, 1H, 4H and 1D scores side by side", "premium", "#/scanner"),
+    ("📊", "Funding and open interest", "Spot crowded longs and shorts before a squeeze", "premium", "#/funding"),
+    ("🧠", "Smart money concepts", "Order blocks, fair value gaps, liquidity and BOS on the chart", "premium", "#/scanner"),
+    ("🤖", "AI analyzer 15 to 50 a day", "Plus AI impact analysis of economic events", "premium", "#/ai"),
+    ("🎓", "Full academy and Pro module", "All 48 lessons and every trader story", "premium", "#/academy"),
+    ("🧮", "Risk calculator pro", "Liquidation price, fees and unlimited journal", "premium", "#/risk"),
+]
+COMPARE = [  # feature, free, premium, elite   ("✓" = included, "🔒" = locked, other text shown as is)
+    ("Ads", "Banner and full-screen ads", "Small banner only", "Small banner only"),
+    ("Scanner timeframes", "1H, 4H, 1D", "All 9, from 1M to 1M", "All 9, from 1M to 1M"),
+    ("Crypto pairs", "Top 40", "Top 50%", "Every pair"),
+    ("Forex, gold, oil, indices, US stocks", "Major pairs", "✓", "✓"),
+    ("Best Trades", "🔒", "🔒", "✓"),
+    ("Gold and BTC deep analysis", "7-day trial", "7-day trial", "✓"),
+    ("Whale and unusual activity radar", "Preview", "Preview", "✓ + alerts"),
+    ("Market analysis", "3 a day", "Unlimited", "Unlimited"),
+    ("AI chart analyzer", "1 a day", "15 a day", "50 a day"),
+    ("AI economic-calendar impact", "🔒", "✓", "✓"),
+    ("Multi-timeframe matrix", "🔒", "✓", "✓"),
+    ("Funding and open interest", "🔒", "✓", "✓"),
+    ("Smart money concepts", "🔒", "✓", "✓"),
+    ("Alerts", "4", "40", "Unlimited"),
+    ("Watchlist", "10", "200", "200"),
+    ("Trading journal", "20 trades a month", "Unlimited", "Unlimited"),
+    ("Portfolio tracker", "5 holdings", "Unlimited", "Unlimited"),
+    ("Risk calculator: liquidation and fees", "🔒", "✓", "✓"),
+    ("Trading academy", "First lesson", "All 48 lessons", "All 48 lessons"),
+    ("Trader stories", "1 story", "All stories", "All stories"),
+    ("Discussion rooms", "15 messages a day", "Unlimited", "Unlimited"),
+    ("Notifications on phone and computer", "✓", "✓", "✓ + whale alerts"),
+    ("Spin, referral and exchange rewards", "✓", "✓", "✓"),
+    ("Priority support", "—", "—", "✓"),
+]
+LESSONS = [  # title, free
+    ("Forex, Crypto & Gold — How These Markets Work", True), ("Reading Candlestick Charts", False),
+    ("Support & Resistance Zones", False), ("RSI — Momentum, Overbought & Oversold", False),
+    ("Trading Gold (XAU/USD)", False), ("Position Sizing & Risk per Trade", False),
+    ("SMC 1 — Market Structure, BOS & CHoCH", False), ("Advanced 1 — Wyckoff Accumulation & Distribution", False),
+    ("Pro 6 — Top-Down Analysis: From the Daily Chart to the Entry", False),
+]
+
+
+def free_tools_html(app: str) -> str:
+    return "\n".join(f'<a class="tcard" href="{app}{r}"><span class="emo">{e}</span><span><b>[[{esc(n)}]]</b><small>[[{esc(d)}]]</small></span>'
+                     f'<span class="tag free">[[Free]]</span></a>' for e, n, d, r in FREE_TOOLS)
+
+
+def pro_tools_html(app: str) -> str:
+    out = []
+    for e, n, d, tier, r in PRO_TOOLS:
+        t = "Elite" if tier == "elite" else "Premium"
+        out.append(f'<a class="tcard locked {tier}" href="{app}{r}"><span class="emo">{e}<i class="lk">{ICONS["lock"]}</i></span>'
+                   f'<span><b>[[{esc(n)}]]</b><small>[[{esc(d)}]]</small></span><span class="tag {"gold" if tier == "elite" else "sky"}">🔒 {t}</span></a>')
+    return "\n".join(out)
+
+
+def compare_html() -> str:
+    def cell(v: str) -> str:
+        if v == "✓":
+            return f'<td class="yes">{ICONS["check"]}</td>'
+        if v == "🔒":
+            return f'<td class="no">{ICONS["lock"]}</td>'
+        if v.startswith("✓ "):
+            return f'<td class="yes">{ICONS["check"]}<small>[[{esc(v[2:])}]]</small></td>'
+        return f'<td>[[{esc(v)}]]</td>' if v != "—" else '<td class="muted">—</td>'
+    rows = "".join(f'<tr><th scope="row">[[{esc(f)}]]</th>{cell(a)}{cell(b)}{cell(c)}</tr>' for f, a, b, c in COMPARE)
+    return (f'<div class="table-wrap compare"><table><thead><tr><th scope="col">[[Feature]]</th><th scope="col">[[Free]]</th>'
+            f'<th scope="col">⭐ Premium</th><th scope="col" class="elite-col">👑 Elite</th></tr></thead><tbody>{rows}</tbody></table></div>')
+
+
+def lessons_html(app: str) -> str:
+    out = []
+    for i, (t, free) in enumerate(LESSONS):
+        if free:
+            out.append(f'<li class="open"><a href="{app}#/lesson/markets-overview"><span class="n">1</span><span>{esc(t)}</span><span class="tag free">[[Free]]</span></a></li>')
+        else:
+            out.append(f'<li class="locked"><a href="{app}#/academy"><span class="n">{ICONS["lock"]}</span><span>{esc(t)}</span><span class="tag sky">🔒 Premium</span></a></li>')
+    out.append(f'<li class="more"><a href="{app}#/academy"><span class="n">+39</span><span>[[more lessons: indicators, patterns, smart money, advanced and pro]]</span></a></li>')
+    return "\n".join(out)
 
 
 # --------------------------------------------------------------------------- articles
@@ -392,9 +556,18 @@ def nice_date(iso: str) -> str:
         return iso
 
 
+def cover_path(a: dict) -> str:
+    """static/img/articles/cover/<slug>.webp made by tools/make_images.py ('' if missing)."""
+    rel = f"static/img/articles/cover/{a['slug']}.webp"
+    return rel if (ROOT / rel).exists() else ""
+
+
 def post_card(a: dict) -> str:
     name, cls = CATEGORIES.get(a["category"], ("Guide", "cat-basics"))
-    return (f'<a class="post" href="{BASE}learn/{a["slug"]}/"><span class="cat {cls}">{esc(name)}</span>'
+    cov = cover_path(a)
+    img = (f'<span class="post-img"><img src="{BASE}{cov}" width="1600" height="900" alt="" loading="lazy" decoding="async"></span>'
+           if cov else "")
+    return (f'<a class="post{" has-img" if cov else ""}" href="{BASE}learn/{a["slug"]}/">{img}<span class="cat {cls}">{esc(name)}</span>'
             f'<h3>{esc(a["title"])}</h3><p>{esc(a["description"])}</p>'
             f'<time datetime="{a["date"]}">{nice_date(a["date"])}, {a["minutes"]} min read</time></a>')
 
@@ -433,8 +606,9 @@ def build_articles(arts: list[dict]) -> None:
     <span class="cat {cat_cls}" style="font-weight:600">{esc(cat_name)}</span>
     <h1 class="article-h1">{esc(a["h1"])}</h1>
     <p class="lead">{esc(a["description"])}</p>
-    <div class="article-meta"><span>By the AliceCryptoScanner team</span><span>Updated <time datetime="{a["updated"]}">{nice_date(a["updated"])}</time></span><span>{a["minutes"]} min read</span></div>
+    <div class="article-meta"><span>By the Alice Forex/Crypto Scanner team</span><span>Updated <time datetime="{a["updated"]}">{nice_date(a["updated"])}</time></span><span>{a["minutes"]} min read</span></div>
   </header>
+  {f'<figure class="article-cover"><img src="{BASE}{cover_path(a)}" width="1600" height="900" alt="{esc(a["title"])}" fetchpriority="high"></figure>' if cover_path(a) else ""}
   <div class="layout">
     <article>
       <details class="toc-mobile"><summary>In this guide</summary><ol>{toc_items}</ol></details>
@@ -452,11 +626,11 @@ def build_articles(arts: list[dict]) -> None:
   </div>
 </div>'''
         art_ld = {"@type": "Article", "headline": a["title"], "description": a["description"], "datePublished": a["date"],
-                  "dateModified": a["updated"], "mainEntityOfPage": url(f"learn/{a['slug']}/"), "image": url("static/img/og-image.png"),
-                  "author": {"@type": "Organization", "name": "AliceCryptoScanner", "url": url()},
+                  "dateModified": a["updated"], "mainEntityOfPage": url(f"learn/{a['slug']}/"), "image": url(cover_path(a) or "static/img/og-image.png"),
+                  "author": {"@type": "Organization", "name": "Alice Forex/Crypto Scanner", "url": url()},
                   "publisher": {"@id": url("#org")}, "articleSection": cat_name, "keywords": a["keywords"]}
-        write_page(f"learn/{a['slug']}/", title=a["title"] + (" | AliceCryptoScanner" if len(a["title"]) <= 48 else ""), og_title=a["title"],
-                   description=a["description"], body=page, nav="learn", og_type="article",
+        write_page(f"learn/{a['slug']}/", title=a["title"] + (" | Alice Forex/Crypto Scanner" if len(a["title"]) <= 36 else ""), og_title=a["title"],
+                   description=a["description"], body=page, nav="learn", og_type="article", og_image=cover_path(a),
                    jsonld=ld(ORG, art_ld, crumbs_ld(crumbs), faq_ld(a["faq"]) if a["faq"] else {}),
                    sitemap=("0.8", a["updated"]))
 
@@ -476,21 +650,21 @@ def build_articles(arts: list[dict]) -> None:
         write_page(path, title=title, description=lead, body=body, nav="learn", jsonld=ld(ORG, coll, crumbs_ld(crumbs)),
                    sitemap=("0.7", ""))
 
-    index_page("learn/", "Learn trading: forex, crypto and gold guides | AliceCryptoScanner", "Learn to trade with a plan",
+    index_page("learn/", "Learn trading: forex, crypto and gold guides | Alice Forex/Crypto Scanner", "Learn to trade with a plan",
                "Practical guides on forex, crypto and gold: position sizing, market hours, indicators, smart money concepts and risk management.",
                arts, "")
     for k, (n, _) in CATEGORIES.items():
         items = [a for a in arts if a["category"] == k]
         if items:
-            index_page(f"learn/{k}/", f"{n} trading guides | AliceCryptoScanner", f"{n} guides",
-                       f"Step-by-step {n.lower()} guides from the AliceCryptoScanner team.", items, k)
+            index_page(f"learn/{k}/", f"{n} trading guides | Alice Forex/Crypto Scanner", f"{n} guides",
+                       f"Step-by-step {n.lower()} guides from the Alice Forex/Crypto Scanner team.", items, k)
 
     # RSS feed
     entries = "".join(
         f"<item><title>{xml_escape(a['title'])}</title><link>{url('learn/' + a['slug'] + '/')}</link>"
         f"<guid>{url('learn/' + a['slug'] + '/')}</guid><pubDate>{dt.datetime.fromisoformat(a['date']).strftime('%a, %d %b %Y 08:00:00 +0000')}</pubDate>"
         f"<description>{xml_escape(a['description'])}</description></item>" for a in arts[:30])
-    feed = (f'<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>AliceCryptoScanner Learn</title>'
+    feed = (f'<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>Alice Forex/Crypto Scanner Learn</title>'
             f'<link>{url("learn/")}</link><description>Forex, crypto and gold trading guides</description>{entries}</channel></rss>')
     (OUT / "learn" / "feed.xml").write_text(feed, encoding="utf-8")
 
@@ -523,7 +697,7 @@ def build_tools() -> None:
         app_ld = {"@type": "WebApplication", "name": meta.get("h1", name), "url": url(f"tools/{slug}/"),
                   "applicationCategory": "FinanceApplication", "operatingSystem": "Any", "isAccessibleForFree": True,
                   "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "description": meta.get("description", short)}
-        write_page(f"tools/{slug}/", title=meta.get("title", f"{name} | AliceCryptoScanner"),
+        write_page(f"tools/{slug}/", title=meta.get("title", f"{name} | Alice Forex/Crypto Scanner"),
                    description=meta.get("description", short), body=page, nav="tools",
                    jsonld=ld(ORG, app_ld, crumbs_ld(crumbs), faq_ld(faq) if faq else {}),
                    extra_js=f'<script src="{BASE}assets/js/tools.js?v={VERSION}" defer></script>', sitemap=("0.9", ""))
@@ -534,7 +708,7 @@ def build_tools() -> None:
 <div class="tool-list" style="padding-bottom:40px">{tool_links_html()}</div>
 <div class="cta-band" style="margin-bottom:72px"><div><h2>Want the pro tools too?</h2><p>The web app adds the live scanner, AI chart analyzer, alerts, whale radar, journal and portfolio tracker.</p></div>
 <div class="btns"><a class="btn btn-gold" href="{BASE}app/#/tools">Open the pro tools</a></div></div></div>'''
-    write_page("tools/", title="Free trading calculators and tools for forex, crypto and gold | AliceCryptoScanner",
+    write_page("tools/", title="Free trading calculators and tools for forex, crypto and gold | Alice Forex/Crypto Scanner",
                description="Free position size, pip value, risk reward, Fibonacci, pivot, liquidation, margin and compounding calculators, plus live forex market hours and a currency converter.",
                body=body, nav="tools", jsonld=ld(ORG, crumbs_ld(crumbs)), sitemap=("0.9", ""))
 
@@ -553,29 +727,40 @@ def build_pages() -> None:
 {f'<p class="lead">{esc(meta["lead"])}</p>' if meta.get("lead") else ''}</header>
 <div class="prose" style="padding-bottom:72px">{body_html}</div></div>'''
         t = meta.get("title", slug)
-        write_page(f"{slug}/", title=t if "AliceCryptoScanner" in t else f"{t} | AliceCryptoScanner", description=meta.get("description", ""),
+        write_page(f"{slug}/", title=t if "Alice Forex/Crypto Scanner" in t else f"{t} | Alice Forex/Crypto Scanner", description=meta.get("description", ""),
                    body=page, jsonld=ld(ORG, crumbs_ld(crumbs)), sitemap=("0.3", ""))
 
 
-def build_special(arts: list[dict]) -> None:
-    # home
+def build_home(arts: list[dict], lang: str) -> None:
+    app = app_url(lang)
     body = render(read(TPL / "home.html"), {
-        "base": BASE, "tool_links": tool_links_html(), "plans": plans_html(), "downloads": downloads_html(),
-        "latest_posts": "\n".join(post_card(a) for a in arts[:6]), "faq": faq_html(HOME_FAQ, open_first=True),
+        "base": BASE, "app": app, "tool_links": tool_links_html(), "plans": plans_html(app), "downloads": downloads_html(),
+        "latest_posts": "\n".join(post_card(a) for a in arts[:6]), "faq": faq_html([(f"[[{q}]]", f"[[{a}]]") for q, a in HOME_FAQ], open_first=True),
         "ad_home": f'<div class="wrap">{ad("slot-home")}</div>' if ad("slot-home") else "",
+        "free_tools": free_tools_html(app), "pro_tools": pro_tools_html(app), "compare": compare_html(), "lessons": lessons_html(app),
+        "channel": esc(SITE.get("telegram_channel", "")), "tg": esc(SITE.get("telegram_support", "")),
     })
     app_ld = {"@type": "SoftwareApplication", "name": "Alice Forex/Crypto Scanner", "operatingSystem": "Android, iOS, Web",
               "applicationCategory": "FinanceApplication", "url": url(), "image": url("static/img/icons/icon-512.png"),
-              "description": SITE["description"],
+              "description": SITE["description"], "inLanguage": [c for c, _ in SITE_LANGS],
               "offers": [{"@type": "Offer", "price": "0", "priceCurrency": "USD", "name": "Free"},
                          {"@type": "Offer", "price": "19.99", "priceCurrency": "USD", "name": "Premium monthly"},
                          {"@type": "Offer", "price": "39.99", "priceCurrency": "USD", "name": "Elite monthly"}]}
-    website = {"@type": "WebSite", "@id": url("#site"), "name": "AliceCryptoScanner", "url": url(), "publisher": {"@id": url("#org")}}
-    faq_items = [(q, a) for q, a in HOME_FAQ]
-    write_page("", title="AliceCryptoScanner: free crypto, forex and gold market scanner", og_title="AliceCryptoScanner",
-               description=SITE["description"], body=body, jsonld=ld(ORG, website, app_ld, faq_ld(faq_items)),
-               extra_js=f'<script src="{BASE}assets/js/board.js?v={VERSION}" defer></script>', sitemap=("1.0", ""),
-               body_class="home")
+    website = {"@type": "WebSite", "@id": url("#site"), "name": "Alice Forex/Crypto Scanner", "url": url(), "publisher": {"@id": url("#org")}}
+    faq_items = [(localize(f"[[{q}]]", lang), localize(f"[[{a}]]", lang)) for q, a in HOME_FAQ]
+    alternates = "\n".join(f'<link rel="alternate" hreflang="{c}" href="{url(lang_home(c))}">' for c, _ in SITE_LANGS) + \
+        f'\n<link rel="alternate" hreflang="x-default" href="{url()}">'
+    title = localize("[[Alice Forex/Crypto Scanner: free crypto, forex and gold market scanner]]", lang)
+    desc = localize("[[Free crypto, forex and gold market scanner. Every market scored 0–100, Best Trades, Gold & BTC deep analysis, alerts and pro trading tools. Works on Android, iPhone and desktop.]]", lang)
+    write_page(lang_home(lang), title=title, og_title="Alice Forex/Crypto Scanner", description=desc,
+               body=localize(body, lang), jsonld=ld(ORG, website, app_ld, faq_ld(faq_items)),
+               extra_js=f'<script src="{BASE}assets/js/board.js?v={VERSION}" defer></script>', sitemap=("1.0" if lang == "en" else "0.8", ""),
+               body_class="home", lang=lang, alternates=alternates)
+
+
+def build_special(arts: list[dict]) -> None:
+    for code, _ in SITE_LANGS:
+        build_home(arts, code)
 
     # pricing
     crumbs = [("Home", ""), ("Pricing", "pricing/")]
@@ -589,10 +774,12 @@ def build_special(arts: list[dict]) -> None:
     body = f'''<div class="wrap"><header class="page-head">{crumbs_html(crumbs)}<h1>Plans and pricing</h1>
 <p class="lead">Start free. Upgrade to Premium or Elite when you want every market, every timeframe and the pro tools. One plan covers the website, Android and iPhone.</p></header>
 {plans_html()}
+<h2 style="margin-top:48px">Compare every feature</h2>
+{compare_html()}
 <section class="section" style="padding-top:56px"><h2>Pricing questions</h2>{faq_html(pricing_faq)}</section></div>'''
-    product = {"@type": "Product", "name": "Alice Forex/Crypto Scanner Premium and Elite", "brand": {"@type": "Brand", "name": "AliceCryptoScanner"},
+    product = {"@type": "Product", "name": "Alice Forex/Crypto Scanner Premium and Elite", "brand": {"@type": "Brand", "name": "Alice Forex/Crypto Scanner"},
                "offers": [{"@type": "Offer", "price": f"{p['monthly']:.2f}", "priceCurrency": "USD", "name": f"{p['label']} monthly", "url": url("pricing/")} for p in DEFAULT_PLANS]}
-    write_page("pricing/", title="Pricing: Free, Premium and Elite plans | AliceCryptoScanner",
+    write_page("pricing/", title="Pricing: Free, Premium and Elite plans | Alice Forex/Crypto Scanner",
                description="Compare the free, Premium and Elite plans of the Alice crypto and forex scanner. Pay with USDT or Bitcoin. One plan works on the website, Android and iPhone.",
                body=body, nav="pricing", jsonld=ld(ORG, product, crumbs_ld(crumbs), faq_ld(pricing_faq)),
                extra_js=f'<script src="{BASE}assets/js/board.js?v={VERSION}" defer></script>', sitemap=("0.8", ""))
@@ -608,7 +795,7 @@ def build_special(arts: list[dict]) -> None:
 <p class="lead">Use Alice on Android, iPhone and your computer with one account.</p></header>
 {downloads_html()}
 <section class="section" style="padding-top:56px"><h2>Install questions</h2>{faq_html(dl_faq)}</section></div>'''
-    write_page("download/", title="Download the Alice Forex/Crypto Scanner app for Android and iPhone | AliceCryptoScanner",
+    write_page("download/", title="Download the Alice Forex/Crypto Scanner app for Android and iPhone",
                description="Download the Alice crypto and forex scanner for Android (APK and Google Play) or add it to your iPhone home screen. One account on every device.",
                body=body, nav="download", jsonld=ld(ORG, crumbs_ld(crumbs), faq_ld(dl_faq)),
                extra_js=f'<script src="{BASE}assets/js/board.js?v={VERSION}" defer></script>', sitemap=("0.8", ""))
@@ -616,7 +803,7 @@ def build_special(arts: list[dict]) -> None:
     # live scanner (public)
     crumbs = [("Home", ""), ("Live scanner", "scanner/")]
     body = render(read(TPL / "scanner.html"), {"base": BASE, "crumbs": crumbs_html(crumbs), "ad_top": ad("slot-top")})
-    write_page("scanner/", title="Live crypto and forex scanner: strongest setups now | AliceCryptoScanner",
+    write_page("scanner/", title="Live crypto and forex scanner: strongest setups now | Alice Forex/Crypto Scanner",
                description="Free live market scanner. See the strongest bullish and bearish crypto, forex, gold and index setups right now, each scored from 0 to 100.",
                body=body, nav="scanner", jsonld=ld(ORG, crumbs_ld(crumbs)),
                extra_js=f'<script src="{BASE}assets/js/board.js?v={VERSION}" defer></script>', sitemap=("0.9", ""))
@@ -625,7 +812,7 @@ def build_special(arts: list[dict]) -> None:
     body = f'''<div class="wrap not-found"><h1>This page moved or never existed</h1><p class="muted">Check the address, or start from one of these.</p>
 <p style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:24px"><a class="btn btn-gold" href="{BASE}">Home</a>
 <a class="btn btn-line" href="{BASE}app/">Web app</a><a class="btn btn-line" href="{BASE}tools/">Free tools</a><a class="btn btn-line" href="{BASE}learn/">Guides</a></p></div>'''
-    write_page("404.html", title="Page not found | AliceCryptoScanner", description="This page could not be found.", body=body,
+    write_page("404.html", title="Page not found | Alice Forex/Crypto Scanner", description="This page could not be found.", body=body,
                robots="noindex", sitemap=None)
 
 
@@ -638,6 +825,8 @@ def build_app() -> None:
                        "ads_head": read(ROOT / "ads" / "head.html").strip(),
                        "slot_app": json.dumps(read(ROOT / "ads" / "slot-app.html").strip()),
                        "slot_spin": json.dumps(read(ROOT / "ads" / "slot-spin.html").strip()),
+                       "slot_interstitial": json.dumps(read(ROOT / "ads" / "slot-interstitial.html").strip()),
+                       "channel": esc(SITE.get("telegram_channel", "")),
                        "analytics": ""})
     (OUT / "app").mkdir(parents=True, exist_ok=True)
     (OUT / "app" / "index.html").write_text(out, encoding="utf-8")
@@ -678,6 +867,32 @@ def build_meta() -> None:
         (OUT / "CNAME").write_text(domain + "\n", encoding="utf-8")
 
 
+LANG_ORDER = ["ur", "hi", "ar", "zh", "es", "pt", "fr", "ru", "tr"]   # same order as the Android app's I18n.kt
+
+
+def build_i18n() -> None:
+    """i18n/app.json (copied from the Android app) + i18n/web.json (website texts) → assets/i18n/<lang>.json.
+    Each entry: "English text": [ur, hi, ar, zh, es, pt, fr, ru, tr]. Texts with {name} placeholders become patterns."""
+    merged: dict[str, list[str]] = {}
+    files = sorted((ROOT / "i18n").glob("*.json"), key=lambda f: (f.name != "app.json", f.name))
+    for f in files:   # app.json first, then the website files (web-*.json) can override
+        for en, vals in json.loads(f.read_text(encoding="utf-8")).items():
+            if len(vals) != len(LANG_ORDER):
+                raise SystemExit(f"{f.name}: '{en}' needs {len(LANG_ORDER)} translations, has {len(vals)}")
+            merged[en] = vals
+    out = OUT / "assets" / "i18n"
+    out.mkdir(parents=True, exist_ok=True)
+    for i, code in enumerate(LANG_ORDER):
+        exact, patterns = {}, {}
+        for en, vals in merged.items():
+            v = vals[i] if i < len(vals) else ""
+            if not v:
+                continue
+            (patterns if re.search(r"\{\w+\}", en) else exact)[en] = v
+        (out / f"{code}.json").write_text(json.dumps({"exact": exact, "patterns": patterns}, ensure_ascii=False, separators=(",", ":")),
+                                          encoding="utf-8")
+
+
 def main() -> None:
     global VERSION
     VERSION = asset_version()
@@ -691,6 +906,7 @@ def main() -> None:
         src = js.read_text(encoding="utf-8")
         src = re.sub(r'(from\s+"\.{1,2}/[^"?]+\.js)"', rf'\1?v={VERSION}"', src)
         js.write_text(src, encoding="utf-8")
+    build_i18n()
     arts = load_articles()
     build_special(arts)
     build_tools()

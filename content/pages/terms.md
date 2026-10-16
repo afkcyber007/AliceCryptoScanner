@@ -1,11 +1,11 @@
 ---
 title: Terms of use
-description: The terms for using the AliceCryptoScanner website, web app and the Alice Forex/Crypto Scanner app, including plans, crypto payments and acceptable use.
+description: The terms for using the Alice Forex/Crypto Scanner website, web app and Android app, including plans, crypto payments and acceptable use.
 updated: 2026-10-15
 ---
 *Last updated: {{updated}}*
 
-By using the AliceCryptoScanner website, the web app or the Alice Forex/Crypto Scanner app ("the service") you agree to these terms. The app's full terms are also available at [{{api}}/terms]({{api}}/terms).
+By using the Alice Forex/Crypto Scanner website, the web app or the Android app ("the service") you agree to these terms. The app's full terms are also available at [{{api}}/terms]({{api}}/terms).
 
 ## The service
 

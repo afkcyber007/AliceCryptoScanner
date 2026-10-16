@@ -1,4 +1,4 @@
-# AliceCryptoScanner website
+# Alice Forex/Crypto Scanner website
 
 The website and web app for **Alice Forex/Crypto Scanner**. GitHub builds and publishes it automatically every time
 something changes in this repository.
@@ -73,3 +73,16 @@ python build.py
 python -m http.server -d _site 8000
 ```
 Then open http://localhost:8000
+
+
+## Languages
+
+The home page is built in 10 languages: `/` (English), `/ur/`, `/hi/`, `/ar/`, `/zh/`, `/es/`, `/pt/`, `/fr/`, `/ru/`, `/tr/`.
+Website texts are in `i18n-site/*.json`, web-app texts in `i18n/*.json` (`app.json` is copied from the Android app).
+Each entry is `"English": [ur, hi, ar, zh, es, pt, fr, ru, tr]`. Guides and tools stay in English.
+
+## Images
+
+Article covers and diagrams are in `static/img/articles/`. They are made by `python tools/make_images.py`
+(needs matplotlib and Pillow on your PC; GitHub only needs the finished images). Add a picture to a guide with
+`![description](img:edu/head_shoulders.webp "caption")`.

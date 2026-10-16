@@ -10,6 +10,8 @@ Smart money concepts, usually shortened to SMC, have become one of the most talk
 
 This guide explains the core concepts in plain language.
 
+![Liquidity sweep below equal lows followed by a change of character](img:edu/liquidity_sweep.webp "A classic smart money sequence: liquidity sweep, change of character, entry on the retest.")
+
 ## The idea behind SMC
 
 Large players such as banks and funds need a lot of liquidity to fill their orders. The theory is that price often moves toward areas where many orders are resting, especially clusters of stop losses, before making its real move. SMC tries to read the footprints those large orders leave on the chart.

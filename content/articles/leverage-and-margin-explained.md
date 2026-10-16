@@ -10,6 +10,8 @@ Leverage is the reason a trader with $1,000 can control a $100,000 position, and
 
 ## What leverage is
 
+![Planning a trade in R](img:edu/risk_reward.webp "Leverage changes margin, not risk: risk is set by your stop and position size.")
+
 Leverage lets you open a position larger than the money in your account. Your broker or exchange holds part of your balance as a deposit, called **margin**, and lends you the rest.
 
 <span class="formula">Margin = Position value ÷ Leverage</span>

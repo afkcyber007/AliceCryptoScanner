@@ -10,6 +10,8 @@ A forex pair is always a contest between two currencies. When EUR/USD rises, it 
 
 ## How a strength meter works
 
+![Base and quote currency](img:art/forex_quote.webp "Every pair is a strength contest between the base and the quote currency.")
+
 The idea is simple: measure each major currency against all the others. If the euro is up against the dollar, the pound, the yen, the franc, the Australian, New Zealand and Canadian dollars, it is genuinely strong. If it is up against some and down against others, it has no real direction of its own.
 
 A strength meter takes the price change of every pair over a chosen period, combines them for each currency and ranks the eight majors: USD, EUR, GBP, JPY, CHF, AUD, NZD and CAD. The result is usually a score on a scale such as 0 to 10.

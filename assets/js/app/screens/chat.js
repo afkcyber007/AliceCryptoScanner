@@ -1,11 +1,26 @@
 /* Live discussion rooms (same rooms as the Android app). */
-import { html, raw, api, session, esc, dateTime, toast, confirmSheet } from "../core.js";
+import { html, raw, api, session, esc, dateTime, toast, confirmSheet, icon } from "../core.js";
+import * as push from "../push.js";
 
 const ROOMS = { crypto: "Crypto discussion", forex: "Forex and gold discussion" };
 
 export default async function chat(ctx) {
   const room = ROOMS[ctx.params.room] ? ctx.params.room : "crypto";
-  ctx.top({ title: ROOMS[room], sub: "Live" });
+  const bellOn = () => push.enabled() && push.prefs()["chat_" + room];
+  const bell = () => `<button class="icon-btn room-bell${bellOn() ? " on" : ""}" type="button" data-bell aria-pressed="${bellOn()}" aria-label="Notify me about new messages" title="Notify me about new messages">${icon.bell}</button>`;
+  const top = () => ctx.top({ title: ROOMS[room], sub: "Live", actions: bell() });
+  top();
+  document.getElementById("top-actions").onclick = async (e) => {
+    if (!e.target.closest("[data-bell]")) return;
+    const p = push.prefs(), on = !bellOn();
+    try {
+      if (on && !push.enabled()) await push.enable();
+      p["chat_" + room] = on; push.savePrefs(p); await push.subscribe();
+      toast(on ? "You'll get a notification when traders post here" : "Room notifications off");
+    } catch (ex) { toast(ex.message, 6000); }
+    top();
+  };
+  ctx.cleanup(() => { const t = document.getElementById("top-actions"); if (t) t.onclick = null; });
   let lastId = 0, me = null, msgs = [], online = 0, pinned = "", rules = "", sending = false;
   const myId = session.user && session.user.id;
   ctx.render(html`<div class="chat">
@@ -15,7 +30,7 @@ export default async function chat(ctx) {
     <div id="c-foot"></div></div>`);
   const log = ctx.view.querySelector("#log");
   const badge = (m) => (m.is_admin ? '<span class="tag gold">Admin</span>' : m.plan === "elite" ? '<span class="tag gold">Elite</span>' : m.plan === "premium" ? '<span class="tag sky">Premium</span>' : "");
-  const msgHtml = (m) => `<div class="msg${m.user_id === myId ? " me" : ""}" data-id="${m.id}"><div class="who">${esc(m.name || "Trader")} ${badge(m)}<time>${esc(dateTime(m.created_at, { hour: "2-digit", minute: "2-digit" }))}</time>${m.user_id !== myId && session.loggedIn ? `<button class="rep" data-report="${m.id}" title="Report">Report</button>` : ""}</div><div class="txt">${esc(m.text)}</div></div>`;
+  const msgHtml = (m) => `<div class="msg${m.user_id === myId ? " me" : ""}" data-id="${m.id}"><div class="who">${esc(m.name || "Trader")} ${badge(m)}<time>${esc(dateTime(m.created_at, { hour: "2-digit", minute: "2-digit" }))}</time>${m.user_id !== myId && session.loggedIn ? `<button class="rep" data-report="${m.id}" title="Report">Report</button>` : ""}</div><div class="txt" data-notr>${esc(m.text)}</div></div>`;
   const foot = () => {
     const f = ctx.view.querySelector("#c-foot"); if (!f) return;
     if (!session.loggedIn) { f.innerHTML = `<div class="panel center" style="padding:12px">Log in to join the conversation. <a href="#/login?next=/chat/${room}">Log in</a> or <a href="#/signup">sign up free</a></div>`; return; }

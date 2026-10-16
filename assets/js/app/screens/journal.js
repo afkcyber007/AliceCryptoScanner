@@ -1,9 +1,10 @@
 /* Trading journal and portfolio tracker. Stored only in this browser (like the app stores them on the phone). */
-import { html, raw, api, cached, store, isPaid, num, usd, pct, upDown, date, toast, confirmSheet, sheet, esc, price, skeleton } from "../core.js";
+import { html, raw, api, cached, store, isPaid, upsell, num, usd, pct, upDown, date, toast, confirmSheet, sheet, esc, price, skeleton } from "../core.js";
 import { md } from "../components.js";
 
 const STRATEGIES = ["EMA pullback", "Breakout", "S/R bounce", "Fibonacci", "Trend follow", "Reversal", "News", "SMC", "Alice Best Trade", "Other"];
 const EMOTIONS = ["Calm", "Confident", "FOMO", "Fear", "Revenge", "Bored", "Greedy"];
+const FREE_JOURNAL_PER_MONTH = 20, FREE_HOLDINGS = 5;
 const loadTrades = () => store.get("journal", []);
 const saveTrades = (t) => store.set("journal", t);
 const n = (v) => { const x = parseFloat(String(v ?? "").replace(",", ".")); return isFinite(x) ? x : null; };
@@ -97,7 +98,14 @@ export async function journal(ctx) {
     const del = f.querySelector("[data-del]");
     if (del) del.addEventListener("click", async () => { s.close(); if (await confirmSheet("Delete this trade?", "This can't be undone.", "Delete", true)) { trades = loadTrades().filter((x) => x.id !== t.id); saveTrades(trades); draw(); } });
   };
-  ctx.on("[data-add]", "click", () => edit(null));
+  ctx.on("[data-add]", "click", () => {
+    const m = new Date(); const start = new Date(m.getFullYear(), m.getMonth(), 1).getTime();
+    if (!isPaid() && loadTrades().filter((t) => (t.opened || 0) >= start).length >= FREE_JOURNAL_PER_MONTH) {
+      upsell("premium", "Free plan: " + FREE_JOURNAL_PER_MONTH + " trades per month", "You logged " + FREE_JOURNAL_PER_MONTH + " trades this month. Premium logs unlimited trades and adds AI coaching.", ["Unlimited journal trades", "AI review of your habits", "Every market and timeframe"]);
+      return;
+    }
+    edit(null);
+  });
   ctx.on("[data-edit]", "click", (e, b) => edit(trades.find((t) => t.id === b.dataset.edit)));
   ctx.on("[data-export]", "click", () => {
     const head = ["opened", "symbol", "side", "entry", "exit", "stop", "target", "risk_usd", "result_usd", "r", "strategy", "emotion", "notes"];
@@ -152,7 +160,10 @@ export async function portfolio(ctx) {
     const del = f.querySelector("[data-del]");
     if (del) del.addEventListener("click", () => { hold = hold.filter((x) => x.id !== h.id); store.set("portfolio", hold); s.close(); draw(); });
   };
-  ctx.on("[data-add]", "click", () => edit(null));
+  ctx.on("[data-add]", "click", () => {
+    if (!isPaid() && hold.length >= FREE_HOLDINGS) { upsell("premium", "Free plan: " + FREE_HOLDINGS + " holdings", "Track your whole portfolio with Premium.", ["Unlimited holdings", "Live value and profit or loss", "No full-screen ads"]); return; }
+    edit(null);
+  });
   ctx.on("[data-edit]", "click", (e, b) => edit(hold.find((x) => x.id === b.dataset.edit)));
   const load = async () => { try { rates = (await cached("/api/fx/rates", 60000, { auth: false })).rates || {}; } catch { } if (ctx.alive) draw(); };
   draw(); await load(); ctx.every(60000, load);

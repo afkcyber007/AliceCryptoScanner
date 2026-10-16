@@ -1,5 +1,5 @@
 /* One market: chart, score breakdown, levels, Fibonacci, pivots, smart money concepts, futures and written analysis. */
-import { html, raw, api, session, isPaid, go, qs, price, pct, num, upDown, scoreCls, labelTag, skeleton, errorBox, ago, toMs, icon, dateTime } from "../core.js";
+import { html, raw, api, session, isPaid, go, isWatched, toggleWatch, toast, qs, price, pct, num, upDown, scoreCls, labelTag, skeleton, errorBox, ago, toMs, icon, dateTime } from "../core.js";
 import { drawChart } from "../chart.js";
 import { partsBars, marketName } from "../components.js";
 
@@ -35,6 +35,7 @@ export default async function detail(ctx) {
         <div class="legend"><span><i style="background:#F5B941"></i>EMA 21</span><span><i style="background:#3BA7FF"></i>EMA 50</span><span><i style="background:#A898FF"></i>EMA 200</span><span><i style="background:rgba(22,199,132,.5);height:8px"></i>Support</span><span><i style="background:rgba(234,57,67,.5);height:8px"></i>Resistance</span>
           ${fib ? html`<label style="display:inline-flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" data-fib ${showFib ? raw("checked") : ""} style="width:16px;height:16px;min-height:0"> Fibonacci</label>` : ""}</div>
         <div class="btn-row" style="margin-top:14px">
+          <button class="btn btn-line btn-sm star-btn${isWatched(market, symbol) ? " on" : ""}" type="button" data-watch aria-pressed="${isWatched(market, symbol)}">${isWatched(market, symbol) ? "★ In watchlist" : "☆ Add to watchlist"}</button>
           <a class="btn btn-gold btn-sm" href="#/alerts${qs({ market, symbol })}">${icon.bell} Set an alert</a>
           <a class="btn btn-line btn-sm" href="#/ai${qs({ market, symbol, tf })}">${icon.ai} AI pair report</a>
           <button class="btn btn-line btn-sm" type="button" data-analysis>${icon.book} Written analysis</button>
@@ -120,6 +121,13 @@ export default async function detail(ctx) {
     }
     if (ctx.alive) draw();
   };
+  ctx.on("[data-watch]", "click", (e, b) => {
+    const r = toggleWatch(market, symbol);
+    if (r === "full") { toast("Watchlist full. Premium allows 200"); go("/upgrade?plan=premium"); return; }
+    const on = r === "added";
+    b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); b.textContent = on ? "★ In watchlist" : "☆ Add to watchlist";
+    toast(on ? "Added to your watchlist" : "Removed from your watchlist");
+  });
   ctx.on("[data-tf]", "click", (e, b) => {
     const t = b.dataset.tf;
     if (!isPaid() && !FREE_TFS.includes(t)) { go("/upgrade?plan=premium"); return; }

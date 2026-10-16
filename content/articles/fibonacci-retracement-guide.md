@@ -10,6 +10,8 @@ Fibonacci retracements are on almost every trading platform, and many traders us
 
 ## Where the numbers come from
 
+![Volatility contraction before a breakout](img:art/bollinger.webp "Retracements and quiet phases often come before the next leg of the trend.")
+
 The Fibonacci sequence, made famous in Europe by Leonardo of Pisa in the 13th century, goes 0, 1, 1, 2, 3, 5, 8, 13, 21, 34 and so on, each number the sum of the two before it. Divide a number by the next one and you approach 0.618, the "golden ratio". Divide by the number two places ahead and you approach 0.382. These ratios, plus a few others, become the trading levels:
 
 | Level | Use |

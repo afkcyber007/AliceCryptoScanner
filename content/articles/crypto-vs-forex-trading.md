@@ -10,6 +10,8 @@ Forex and crypto are the two most popular markets for new traders, and many trad
 
 ## At a glance
 
+![Trading styles by holding time](img:art/trading_styles.webp "Pick the style and market that fit your time and temperament.")
+
 | | Forex | Crypto |
 |---|---|---|
 | Trading hours | 24 hours, Monday to Friday | 24 hours, 7 days a week |

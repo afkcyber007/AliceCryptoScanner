@@ -1,5 +1,6 @@
 /* Home: prices, offers, discussion rooms, shortcuts, market pulse, top setups, events and heatmap. */
-import { html, raw, api, cached, session, plan, isPaid, price, pct, upDown, toMs, dateTime, icon, skeleton, errorBox, loadConfig, ago } from "../core.js";
+import { A, html, raw, api, cached, session, plan, isPaid, price, pct, upDown, toMs, dateTime, icon, skeleton, errorBox, loadConfig, ago } from "../core.js";
+import { lang } from "../i18n.js";
 import { MARKETS, setupRow, quoteCard, offerBox, tickOffers, promoBox, wirePromo, detailHref } from "../components.js";
 
 export default async function home(ctx) {
@@ -18,7 +19,7 @@ export default async function home(ctx) {
     const s = (ov && ov.sentiment) || (brief && brief.sentiment) || null;
     ctx.render(html`
       <div class="greet"><div><h2>${hello}, ${first}</h2><p>${ov ? "Markets updated " + ago(ov.updated_at) : "Loading the markets…"}</p></div>
-        ${u ? "" : html`<a class="btn btn-gold btn-sm" href="#/signup">Sign up free</a>`}</div>
+        <span class="btn-row" style="gap:8px;margin:0;flex-wrap:nowrap"><a class="lang-chip" href="#/language" aria-label="Language">${icon.globe}${lang.toUpperCase()}</a>${u ? "" : html`<a class="btn btn-gold btn-sm" href="#/signup">Sign up free</a>`}</span></div>
 
       ${notes.length ? html`<div class="panel" style="border-color:rgba(59,167,255,.4)">${notes.slice(0, 1).map((n) => html`<b>${n.title}</b><p class="muted mt0" style="margin:4px 0 0">${n.body}</p>`)}</div>` : ""}
 
@@ -45,6 +46,8 @@ export default async function home(ctx) {
       <a class="banner gold" href="#/gold"><span class="emo">🥇</span><span><b>Gold deep analysis</b><span>Dollar, yields, events and news in one verdict. Elite, 7-day free trial.</span></span><span aria-hidden="true">${icon.chev}</span></a>
       <a class="banner btc" href="#/btc"><span class="emo">₿</span><span><b>BTC deep analysis</b><span>Stocks, dollar, futures, whales and news. Elite, 7-day free trial.</span></span><span aria-hidden="true">${icon.chev}</span></a>
       <a class="banner spin" href="#/spin"><span class="emo">🎡</span><span><b>Spin and earn Premium free</b><span>Spin daily and invite friends. Coins turn into Premium and Elite.</span></span><span aria-hidden="true">${icon.chev}</span></a>
+      <a class="banner channel" href="${A.channel || "https://t.me/AliceCryptoPro_Official"}" target="_blank" rel="noopener"><span class="emo">📣</span><span><b>Free daily analysis on Telegram</b><span>Gold, BTC and forex outlook every day from the Alice team.</span></span><span class="btn btn-sm btn-tg">Join</span></a>
+      <a class="banner exch" href="#/exchanges"><span class="emo">🏦</span><span><b>Best exchanges and brokers</b><span>Sign-up bonuses, low fees, and free Premium or Elite when you join with our link.</span></span><span aria-hidden="true">${icon.chev}</span></a>
 
       <div class="grid-2">
         <section class="panel">
@@ -83,7 +86,7 @@ export default async function home(ctx) {
   draw();
   const load = async () => {
     const [o, b, c, a] = await Promise.allSettled([
-      api("/api/markets/overview", { auth: false }), cached("/api/market/brief", 300000), cached("/api/calendar", 600000), cached("/api/announcements", 600000),
+      api("/api/markets/overview", { auth: false }), cached("/api/market/brief", 300000), cached("/api/calendar", 600000), cached("/api/announcements?client=web", 600000),
     ]);
     if (o.status === "fulfilled") ov = o.value;
     else if (!ov) { ctx.render(errorBox(o.reason)); return; }

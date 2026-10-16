@@ -1,6 +1,6 @@
 ---
 title: Contact
-description: Contact the AliceCryptoScanner team on Telegram or by email for support, payments, partnerships and feedback.
+description: Contact the Alice Forex/Crypto Scanner team on Telegram or by email for support, payments, partnerships and feedback.
 lead: The fastest way to reach us is Telegram. We usually reply within a few hours.
 ---
 ## Support on Telegram

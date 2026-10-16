@@ -10,6 +10,8 @@ Gold has no earnings, pays no dividend and has no central bank of its own. So wh
 
 ## 1. Real interest rates
 
+![Gold trend with moving averages](img:art/ma_crossover.webp "Dollar, yields and risk sentiment drive gold's big trends.")
+
 The single most important driver over the long run is the **real interest rate**: the yield on bonds after inflation. In the US it is often tracked with the yield on 10-year Treasury Inflation-Protected Securities (TIPS).
 
 Holding gold means giving up the interest you could earn on bonds or cash. When real yields are high, that cost is high and gold tends to struggle. When real yields fall or turn negative, holding gold costs little and demand rises.

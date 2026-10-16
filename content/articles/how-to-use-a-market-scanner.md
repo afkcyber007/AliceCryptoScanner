@@ -10,6 +10,8 @@ There are hundreds of crypto pairs, dozens of forex pairs and thousands of stock
 
 ## What a scanner does
 
+![Top-down analysis across four timeframes](img:edu/top_down.webp "Use the scanner to find markets, then confirm across timeframes before you enter.")
+
 A scanner applies the same rules to every market at the same time. Simple scanners look for one condition, such as RSI below 30 or price above the 200-day average. More advanced scanners combine many conditions into a score.
 
 The Alice scanner gives each market a **score from 0 to 100** on the timeframe you choose, combining:

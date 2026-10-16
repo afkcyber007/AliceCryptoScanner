@@ -10,6 +10,8 @@ If you strip technical analysis down to one idea, it is this: price remembers. L
 
 ## What support and resistance are
 
+![Resistance becomes support after a break and retest](img:edu/sr_flip.webp "When resistance breaks, it often becomes support on the retest.")
+
 **Support** is a price area where buying has been strong enough to stop a fall. **Resistance** is an area where selling has been strong enough to stop a rise.
 
 They work because of people and orders. Traders who missed a move place buy orders where price last bounced. Traders who bought near a top and sat through a loss sell when price gets back to their entry. Stop losses and pending orders cluster around obvious levels. All of that creates real supply and demand at those prices.

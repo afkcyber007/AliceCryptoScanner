@@ -10,10 +10,11 @@ export async function academy(ctx) {
   try { d = await api("/api/course"); } catch (e) { ctx.render(errorBox(e)); return; }
   const done = new Set(JSON.parse(localStorage.getItem("alice.lessonsDone") || "[]"));
   ctx.render(html`
-    <section class="panel"><h2 style="font-size:20px;margin:0 0 4px">${d.title}</h2><p class="note mt0" style="margin:0">${d.lessons} lessons. ${done.size} completed.${d.paid ? "" : " The first lessons are free, the rest come with Premium."}</p></section>
+    <section class="panel academy-head"><h2 style="font-size:20px;margin:0 0 4px">${d.title}</h2><p class="note mt0" style="margin:0">${d.lessons} lessons. ${done.size} completed.${d.paid ? "" : " The first lessons are free, the rest come with Premium."}</p>
+      ${d.paid ? "" : html`<div class="progress-lock"><span>${icon.lock}</span><span><b>${(d.modules || []).reduce((n, m) => n + m.lessons.filter((l) => l.locked).length, 0)} lessons locked</b><small>Unlock the whole course, Pro module and live chart examples</small></span><a class="btn btn-gold btn-sm" href="#/upgrade?plan=premium">Unlock all</a></div>`}</section>
     ${(d.modules || []).map((m) => html`<section class="panel"><div class="panel-head"><h2>${m.title.replace(/^\d+\s·\s/, "")}</h2><span class="note">Module ${m.order || ""}</span></div><div class="list">
-      ${m.lessons.map((l) => html`<a class="li" href="#/lesson/${l.id}"><span class="with-ic"><span class="lead-ic">${done.has(l.id) ? "✅" : l.locked ? "🔒" : "📘"}</span><span><span class="t">${l.title}</span><span class="s">${l.summary}</span></span></span>
-        <span class="r">${l.free ? html`<span class="tag bull">Free</span>` : l.locked ? html`<span class="tag sky">Premium</span>` : ""}<small class="muted">${l.minutes} min</small></span></a>`)}</div></section>`)}`);
+      ${m.lessons.map((l) => html`<a class="li${l.locked ? " is-locked" : ""}" href="#/lesson/${l.id}"><span class="with-ic"><span class="lead-ic">${done.has(l.id) ? "✅" : l.locked ? "🔒" : "📘"}</span><span><span class="t">${l.title}</span><span class="s">${l.summary}</span></span></span>
+        <span class="r">${l.free ? html`<span class="tag bull">Free</span>` : l.locked ? html`<span class="tag sky">🔒 Premium</span>` : ""}<small class="muted">${l.minutes} min</small></span></a>`)}</div></section>`)}`);
 }
 
 export async function lesson(ctx) {

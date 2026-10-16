@@ -10,6 +10,8 @@ Price tells you where the market is. Funding rates and open interest tell you wh
 
 ## Perpetual futures in one minute
 
+![Liquidity sweep of crowded positions](img:edu/liquidity_sweep.webp "Crowded positions get swept: funding and open interest show where the crowd is.")
+
 Most crypto trading volume happens in **perpetual futures**, contracts that track the price of a coin but never expire. Because there is no expiry date to pull the contract price back to the spot price, exchanges use a **funding rate** instead.
 
 ## What the funding rate is

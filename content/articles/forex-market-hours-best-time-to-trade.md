@@ -10,6 +10,8 @@ The forex market is open 24 hours a day, five days a week, but it is not equally
 
 ## Why forex never sleeps
 
+![Forex sessions in UTC with the London and New York overlap](img:edu/daily_routine.webp "The four sessions in UTC. The London–New York overlap is the busiest window.")
+
 There is no central forex exchange. Currencies are traded between banks, brokers, funds and companies around the world. As the business day starts in one financial centre and ends in another, trading passes around the globe from Sydney to Tokyo to London to New York.
 
 The week starts on **Sunday at 17:00 New York time**, when Wellington and Sydney open, and ends on **Friday at 17:00 New York time**.

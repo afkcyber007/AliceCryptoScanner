@@ -152,7 +152,7 @@ export async function refreshMe() {
 }
 export async function loadConfig(force) {
   try {
-    const c = force ? await api("/api/config", { auth: false }) : await cached("/api/config", 180000, { auth: false });
+    const c = force ? await api("/api/config?client=web", { auth: false }) : await cached("/api/config?client=web", 180000, { auth: false });
     session.config = c; store.set("config", c); emit("config", c); return c;
   } catch { return session.config; }
 }
@@ -326,3 +326,38 @@ export function makeCtx(view, params, query, setTop) {
   };
   return ctx;
 }
+
+/* ------------------------------------------------------------------ watchlist (same as the app: Free 10, Premium/Elite 200) */
+export const WATCH_LIMIT = () => (isPaid() ? 200 : 10);
+export const watchlist = () => store.get("watchlist", ["crypto|BTCUSDT", "crypto|ETHUSDT", "commodities|XAUUSD", "forex|EURUSD"]);
+export const isWatched = (market, symbol) => watchlist().includes(market + "|" + symbol);
+/** Returns "added", "removed" or "full". */
+export function toggleWatch(market, symbol) {
+  const key = market + "|" + symbol, cur = watchlist();
+  if (cur.includes(key)) { store.set("watchlist", cur.filter((k) => k !== key)); return "removed"; }
+  if (cur.length >= WATCH_LIMIT()) return "full";
+  store.set("watchlist", [...cur, key]); return "added";
+}
+
+/** Attractive "unlock" sheet shown when a free user reaches a limit or taps a locked feature. */
+export function upsell(tier, title, text, perks = []) {
+  const t = tier === "elite" ? "Elite" : "Premium";
+  const s = sheet(`<div class="upsell ${tier}"><div class="upsell-lock">${icon.lock}</div><span class="tag ${tier === "elite" ? "gold" : "sky"}">${tier === "elite" ? "👑" : "⭐"} ${t}</span>
+    <h2>${esc(title)}</h2><p class="muted">${esc(text)}</p>${perks.length ? String(featList(perks)) : ""}
+    <div class="btn-row" style="justify-content:center;margin-top:14px">${session.loggedIn ? `<a class="btn btn-gold" href="#/upgrade?plan=${tier}">Upgrade to ${t}</a>` : `<a class="btn btn-gold" href="#/signup">Create a free account</a>`}<a class="btn btn-line" href="#/rewards">Earn it free with coins</a></div></div>`, { label: t });
+  s.el.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => s.close()));
+  return s;
+}
+/** A locked preview: blurred sample content with a lock overlay that opens the upgrade sheet. */
+export function lockedPreview(tier, title, sampleHtml) {
+  const t = tier === "elite" ? "Elite" : "Premium";
+  return html`<div class="locked-preview" data-unlock="${tier}" data-unlock-title="${title}" role="button" tabindex="0" aria-label="${title}: ${t} feature">
+    <div class="lp-sample" aria-hidden="true">${raw(String(sampleHtml || ""))}</div>
+    <div class="lp-over"><span class="lp-lock">${icon.lock}</span><b>${title}</b><span class="tag ${tier === "elite" ? "gold" : "sky"}">${t}</span><span class="btn btn-gold btn-sm">Unlock</span></div></div>`;
+}
+document.addEventListener("click", (e) => {
+  const el = e.target.closest && e.target.closest("[data-unlock]");
+  if (!el) return;
+  e.preventDefault();
+  upsell(el.dataset.unlock, el.dataset.unlockTitle || "Unlock this feature", el.dataset.unlockText || (el.dataset.unlock === "elite" ? "This is part of Elite, our most complete plan." : "This is part of Premium. Unlock it and remove the big ads."));
+});

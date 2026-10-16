@@ -10,6 +10,8 @@ Few events in crypto get as much attention as the Bitcoin halving. Every four ye
 
 ## What the halving is
 
+![Accumulation, markup, distribution and markdown](img:edu/market_cycle.webp "Every market moves through accumulation, markup, distribution and markdown.")
+
 New bitcoins are created as a reward to miners who add blocks to the blockchain. Bitcoin's code cuts this **block reward in half every 210,000 blocks**. With a block roughly every 10 minutes, that is about every four years.
 
 The rule is part of Bitcoin's fixed supply: there will never be more than **21 million** bitcoins. Each halving slows the creation of new coins, and the last fractions of a bitcoin are expected to be mined around the year 2140.

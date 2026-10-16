@@ -10,6 +10,8 @@ Most traders know what they think they do. A trading journal shows what they act
 
 ## Why a journal works
 
+![A trade planned in R with 2R and 3R targets](img:edu/risk_reward.webp "Journal every trade in R: risk 1R, targets at 2R and 3R.")
+
 Memory is selective. We remember the big win and the painful loss, and forget the forty ordinary trades that really decide our results. A journal records every trade the same way, so after a few weeks you can see:
 
 - which setups make money and which do not

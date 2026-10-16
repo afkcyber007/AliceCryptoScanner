@@ -1,11 +1,11 @@
 ---
 title: Privacy policy
-description: How AliceCryptoScanner and the Alice Forex/Crypto Scanner app collect, use and protect your data, including cookies and advertising on this website.
+description: How the Alice Forex/Crypto Scanner website, web app and Android app collect, use and protect your data, including cookies and advertising on this website.
 updated: 2026-10-15
 ---
 *Last updated: {{updated}}*
 
-This policy explains what data we collect on the AliceCryptoScanner website ({{site_url}}), in the web app and in the Alice Forex/Crypto Scanner Android app, and how we use it. The full app privacy policy is also available at [{{api}}/privacy]({{api}}/privacy).
+This policy explains what data we collect on the Alice Forex/Crypto Scanner website ({{site_url}}), in the web app and in the Alice Forex/Crypto Scanner Android app, and how we use it. The full app privacy policy is also available at [{{api}}/privacy]({{api}}/privacy).
 
 ## Data you give us
 
