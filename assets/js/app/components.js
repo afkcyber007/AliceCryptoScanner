@@ -1,5 +1,5 @@
 /* Pieces shared by several screens. */
-import { html, raw, esc, icon, price, pct, upDown, scoreHtml, labelTag, untilText, toMs, api, session, num } from "./core.js";
+import { html, raw, esc, icon, price, pct, upDown, scoreHtml, labelTag, untilText, toMs, api, session, num, mountAd } from "./core.js";
 
 export const MARKETS = [["crypto", "Crypto"], ["forex", "Forex"], ["commodities", "Gold and oil"], ["indices", "Indices"], ["stocks", "US stocks"]];
 export const marketName = (m) => (MARKETS.find((x) => x[0] === m) || [m, m])[1];
@@ -110,8 +110,7 @@ export function sponsoredBreak(seconds = 6, title = "Your reward is almost ready
       <button class="btn btn-gold btn-block" style="margin-top:12px" id="sb-go" disabled>Continue</button></div>`;
     root.appendChild(bg);
     if (code) {
-      const slot = bg.querySelector("#sb-slot"); slot.innerHTML = code;
-      slot.querySelectorAll("script").forEach((old) => { const s = document.createElement("script"); for (const a of old.attributes) s.setAttribute(a.name, a.value); s.text = old.text; old.replaceWith(s); });
+      mountAd(bg.querySelector("#sb-slot"), code);
     }
     let left = seconds;
     const btn = bg.querySelector("#sb-go"), cnt = bg.querySelector("#sb-count");

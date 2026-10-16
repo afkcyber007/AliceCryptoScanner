@@ -361,3 +361,25 @@ document.addEventListener("click", (e) => {
   e.preventDefault();
   upsell(el.dataset.unlock, el.dataset.unlockTitle || "Unlock this feature", el.dataset.unlockText || (el.dataset.unlock === "elite" ? "This is part of Elite, our most complete plan." : "This is part of Premium. Unlock it and remove the big ads."));
 });
+
+/** Puts an ad company's code into an element. Codes that use document.write (Adsterra / AdSense-style
+   "atOptions" banners) can't run inside a page that is already loaded, so they get their own small iframe. */
+export function mountAd(el, code) {
+  if (!el || !code) return;
+  if (/atOptions|document\.write/.test(code)) {
+    const w = +((code.match(/['"]?width['"]?\s*:\s*(\d+)/) || [])[1] || 300);
+    const h = +((code.match(/['"]?height['"]?\s*:\s*(\d+)/) || [])[1] || 250);
+    const f = document.createElement("iframe");
+    f.setAttribute("title", "Advertisement"); f.setAttribute("scrolling", "no"); f.setAttribute("frameborder", "0");
+    f.style.cssText = `width:${w}px;max-width:100%;height:${h}px;border:0;display:block;margin:0 auto;background:transparent`;
+    f.srcdoc = `<!doctype html><html><head><base target="_blank"><style>html,body{margin:0;padding:0;background:transparent;overflow:hidden;display:flex;justify-content:center}</style></head><body>${code}</body></html>`;
+    el.innerHTML = ""; el.appendChild(f);
+    return;
+  }
+  el.innerHTML = code;
+  el.querySelectorAll("script").forEach((old) => {
+    const s = document.createElement("script");
+    for (const a of old.attributes) s.setAttribute(a.name, a.value);
+    s.text = old.text; old.replaceWith(s);
+  });
+}

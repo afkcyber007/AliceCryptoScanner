@@ -823,9 +823,9 @@ def build_app() -> None:
                        "og_image": url("static/img/og-image.png"), "play_url": esc(SITE.get("google_play_url", "")),
                        "ios_url": esc(SITE.get("app_store_url", "")), "tg": esc(SITE.get("telegram_support", "")),
                        "ads_head": read(ROOT / "ads" / "head.html").strip(),
-                       "slot_app": json.dumps(read(ROOT / "ads" / "slot-app.html").strip()),
-                       "slot_spin": json.dumps(read(ROOT / "ads" / "slot-spin.html").strip()),
-                       "slot_interstitial": json.dumps(read(ROOT / "ads" / "slot-interstitial.html").strip()),
+                       "slot_app": json.dumps(read(ROOT / "ads" / "slot-app.html").strip()).replace("</", "<\\/"),
+                       "slot_spin": json.dumps(read(ROOT / "ads" / "slot-spin.html").strip()).replace("</", "<\\/"),
+                       "slot_interstitial": json.dumps(read(ROOT / "ads" / "slot-interstitial.html").strip()).replace("</", "<\\/"),
                        "channel": esc(SITE.get("telegram_channel", "")),
                        "analytics": ""})
     (OUT / "app").mkdir(parents=True, exist_ok=True)

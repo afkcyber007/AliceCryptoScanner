@@ -1,7 +1,7 @@
 /* Alice web app: app shell, navigation and background work. */
 import {
   A, $, $$, html, raw, esc, icon, session, plan, isPaid, refreshMe, loadConfig, route, parseHash, match, go, back, navStack,
-  makeCtx, on, emit, toast, api, store, errorBox, int,
+  makeCtx, on, emit, mountAd, toast, api, store, errorBox, int,
 } from "./core.js";
 import { LANGS, lang, loadLang, setLang } from "./i18n.js";
 import * as push from "./push.js";
@@ -150,7 +150,7 @@ function updateAd() {
   const show = slot && ads.enabled !== false && (!isPaid() || ads.paid_banner !== false) && !document.body.classList.contains("bare");
   document.body.classList.toggle("has-ad", !!show);
   if (!show) { box.hidden = true; box.innerHTML = ""; delete box.dataset.filled; return; }
-  if (!box.dataset.filled) { box.innerHTML = slot; runScripts(box); box.dataset.filled = "1"; }
+  if (!box.dataset.filled) { mountAd(box, slot); box.dataset.filled = "1"; }
   box.hidden = false;
 }
 let screensSinceAd = 0;
@@ -176,7 +176,7 @@ function showInterstitial() {
     <div class="ist-body">${code || `<div class="ist-house"><div class="emo">⭐</div><b>Trade without full-screen ads</b><p>Premium removes full-screen ads and unlocks every market, every timeframe, the AI analyzer and the full academy.</p><a class="btn btn-gold" href="#/upgrade?plan=premium">See Premium</a>${A.channel ? `<a class="btn btn-line" href="${A.channel}" target="_blank" rel="noopener">Free daily analysis on Telegram</a>` : ""}</div>`}</div>
     <a class="ist-foot" href="#/upgrade?plan=premium">Remove full-screen ads with Premium</a></div>`;
   document.body.appendChild(d);
-  if (code) runScripts(d.querySelector(".ist-body"));
+  if (code) mountAd(d.querySelector(".ist-body"), code);
   const x = d.querySelector(".ist-x");
   let n = 5;
   const close = () => d.remove();
