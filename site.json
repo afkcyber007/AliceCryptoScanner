@@ -2,19 +2,19 @@
   "name": "Alice Forex/Crypto Scanner",
   "app_name": "Alice Forex/Crypto Scanner",
   "description": "Free crypto, forex and gold market scanner. Every market scored 0–100, Best Trades, Gold & BTC deep analysis, alerts and pro trading tools. Works on Android, iPhone and desktop.",
-
   "api_url": "https://alicecryptoscanner.duckdns.org",
-
   "domain": "aliceforexcryptoscanner.com",
-
   "google_play_url": "",
   "app_store_url": "",
-
   "telegram_support": "https://t.me/AliceSupportTeam",
   "telegram_channel": "https://t.me/AliceCryptoPro_Official",
+  "telegram_join": "https://t.me/AliceSupportTeam",
+  "telegram_bot": "https://t.me/AliceCryptoScanner_bot",
+  "forex_channel": "https://t.me/aforexkingPro_Official",
+  "robot_channel": "https://t.me/AforexKingEA_Official",
+  "vip_support": "https://t.me/AliceSupportTeam",
   "twitter_url": "",
   "contact_email": "Aforex.king@gmail.com",
-
   "google_analytics_id": "",
   "google_site_verification": "",
   "bing_site_verification": ""

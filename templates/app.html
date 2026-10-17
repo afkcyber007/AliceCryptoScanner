@@ -18,6 +18,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Alice Scanner">
+<script>try{var t=localStorage.getItem("alice-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="{{api}}" crossorigin>
@@ -27,7 +28,7 @@
 {{ads_head}}
 <script>
 window.ALICE = { api: "{{api}}", base: "{{base}}", site: "{{site_url}}", play: "{{play_url}}", ios: "{{ios_url}}", tg: "{{tg}}", v: "{{v}}",
-  slots: { app: {{slot_app}}, appTop: {{slot_app_top}}, appInline: {{slot_app_inline}}, spin: {{slot_spin}}, interstitial: {{slot_interstitial}} }, channel: "{{channel}}" };
+  slots: { app: {{slot_app}}, appTop: {{slot_app_top}}, appInline: {{slot_app_inline}}, spin: {{slot_spin}}, interstitial: {{slot_interstitial}} }, channel: "{{channel}}", join: "{{join}}", bot: "{{bot}}" };
 </script>
 </head>
 <body class="in-app">
@@ -52,7 +53,7 @@ window.ALICE = { api: "{{api}}", base: "{{base}}", site: "{{site_url}}", play: "
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="sheet-root"></div>
-<div class="fab-support" id="fab-support"><a class="fab-main" href="{{tg}}" target="_blank" rel="noopener" aria-label="Support on Telegram" title="Support on Telegram"><svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true"><path d="M9.8 15.4 9.6 19c.4 0 .6-.2.8-.4l1.9-1.8 4 2.9c.7.4 1.3.2 1.5-.7l2.7-12.6c.3-1.1-.4-1.6-1.1-1.3L3.6 10.9c-1.1.4-1.1 1-.2 1.3l4 1.2 9.3-5.9c.4-.3.8-.1.5.2"/></svg><span class="fab-label">Support</span></a></div>
+<div class="fab-support" id="fab-support"><a class="fab-ch fab-join" href="{{join}}" target="_blank" rel="noopener" aria-label="Join our Telegram Channel" title="Join our Telegram Channel"><span class="fab-ic"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M9.8 15.4 9.6 19c.4 0 .6-.2.8-.4l1.9-1.8 4 2.9c.7.4 1.3.2 1.5-.7l2.7-12.6c.3-1.1-.4-1.6-1.1-1.3L3.6 10.9c-1.1.4-1.1 1-.2 1.3l4 1.2 9.3-5.9c.4-.3.8-.1.5.2"/></svg></span><span class="fab-label">Join our Telegram Channel</span></a><a class="fab-ch fab-bot" href="{{bot}}" target="_blank" rel="noopener" aria-label="AliceCryptoScanner Bot" title="AliceCryptoScanner Bot"><span class="fab-ic"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M9.8 15.4 9.6 19c.4 0 .6-.2.8-.4l1.9-1.8 4 2.9c.7.4 1.3.2 1.5-.7l2.7-12.6c.3-1.1-.4-1.6-1.1-1.3L3.6 10.9c-1.1.4-1.1 1-.2 1.3l4 1.2 9.3-5.9c.4-.3.8-.1.5.2"/></svg></span><span class="fab-label">AliceCryptoScanner Bot</span></a><a class="fab-main" href="{{tg}}" target="_blank" rel="noopener" aria-label="Support on Telegram" title="Support on Telegram"><svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true"><path d="M9.8 15.4 9.6 19c.4 0 .6-.2.8-.4l1.9-1.8 4 2.9c.7.4 1.3.2 1.5-.7l2.7-12.6c.3-1.1-.4-1.6-1.1-1.3L3.6 10.9c-1.1.4-1.1 1-.2 1.3l4 1.2 9.3-5.9c.4-.3.8-.1.5.2"/></svg><span class="fab-label">Support</span></a></div>
 <noscript><p style="padding:24px">Alice needs JavaScript to run. Please enable it in your browser settings.</p></noscript>
 <script type="module" src="{{base}}assets/js/app/main.js?v={{v}}"></script>
 </body>

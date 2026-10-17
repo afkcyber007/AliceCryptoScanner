@@ -74,7 +74,8 @@ function drawShell(activeTab, path) {
     return `<a href="${href}" class="${on ? "on" : ""}">${ic}<span>${label}</span>${lock}</a>`;
   }).join("")).join("");
   const u = session.user;
-  const ch = A.channel ? `<a class="side-channel" href="${A.channel}" target="_blank" rel="noopener">${icon.telegram}<span><b>Daily analysis</b><small>Join our Telegram channel</small></span></a>` : "";
+  const ch = (A.join ? `<a class="side-channel" href="${A.join}" target="_blank" rel="noopener">${icon.telegram}<span><b>Join our Telegram Channel</b><small>Free daily analysis and signals</small></span></a>` : "")
+    + (A.bot ? `<a class="side-channel bot" href="${A.bot}" target="_blank" rel="noopener">${icon.telegram}<span><b>AliceCryptoScanner Bot</b><small>All tools and market news on Telegram</small></span></a>` : "");
   $("#side-foot").innerHTML = ch + (u
     ? `<div class="panel" style="padding:12px"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><b style="font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(u.name || u.email)}</b><span class="plan-badge ${p}">${p[0].toUpperCase() + p.slice(1)}</span></div>${p === "free" ? `<a class="btn btn-gold btn-sm btn-block" style="margin-top:10px" href="#/upgrade">Upgrade</a>` : ""}</div>`
     : `<div class="panel" style="padding:12px"><b style="font-size:14px">Free account</b><p class="note" style="margin:4px 0 10px">Save alerts, chat and collect coins.</p><a class="btn btn-gold btn-sm btn-block" href="#/signup">Sign up free</a><a class="btn btn-quiet btn-sm btn-block" href="#/login">Log in</a></div>`);
@@ -88,7 +89,8 @@ function setTop({ title = "Alice", sub = "", actions = null, back: showBack = fa
   const coins = session.user ? `<a class="coin-pill" href="#/rewards" title="Your coins">${icon.coin}${int(session.user.coins || 0)}</a>` : "";
   const alertsBtn = `<a class="icon-btn" href="#/alerts" aria-label="Alerts">${icon.bell}${unseenAlerts ? '<span class="dot"></span>' : ""}</a>`;
   const langBtn = `<a class="icon-btn lang-btn" href="#/language" aria-label="Language" title="Language">${icon.globe}<small>${lang.toUpperCase()}</small></a>`;
-  $("#top-actions").innerHTML = actions != null ? String(actions) : (session.user ? coins + langBtn + alertsBtn : langBtn + `<a class="btn btn-gold btn-sm" href="#/signup">Sign up free</a>`);
+  const themeBtn = `<button class="icon-btn theme-ic" type="button" data-theme-toggle aria-label="Dark or light mode" title="Dark or light mode">${document.documentElement.getAttribute("data-theme") === "light" ? icon.moon : icon.sun}</button>`;
+  $("#top-actions").innerHTML = actions != null ? String(actions) : (session.user ? coins + themeBtn + langBtn + alertsBtn : themeBtn + langBtn + `<a class="btn btn-gold btn-sm" href="#/signup">Sign up free</a>`);
 }
 $("#back-btn").addEventListener("click", () => back());
 
@@ -109,6 +111,7 @@ async function render() {
   drawShell(r.opts.tab, path);
   setTop({ title: "Alice", back: !!r.opts.back });
   document.body.classList.toggle("bare", !!r.opts.bare);
+  document.body.classList.toggle("in-chat", path.startsWith("/chat"));
   const ctx = makeCtx(view, params, query, (o) => setTop({ back: !!r.opts.back, ...o }));
   current = ctx;
   try {
@@ -130,6 +133,24 @@ on("auth", () => { toast("Please log in again"); go("/login"); });
 on("user", (u) => { push.resync(); if (u && u.language && u.language !== "en" && u.language !== lang && LANGS.some((l) => l[0] === u.language) && !store.get("lang")) setLang(u.language).then(() => render()); });
 on("user", () => { const { path } = parseHash(); const m = match(path); if (m) drawShell(m.r.opts.tab, path); });
 document.addEventListener("click", (e) => { const t = e.target.closest("[data-retry]"); if (t) render(); });
+/* dark / light mode — same choice as on the website (saved in this browser) */
+export function setTheme(next) {
+  document.documentElement.setAttribute("data-theme", next);
+  store.set("theme", next);
+  try { localStorage.setItem("alice-theme", next); } catch { }
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute("content", next === "light" ? "#F3F5F9" : "#0A0E17");
+  document.querySelectorAll(".theme-ic").forEach((b) => { b.innerHTML = next === "light" ? icon.moon : icon.sun; });
+  document.querySelectorAll("[data-theme-set]").forEach((b) => b.setAttribute("aria-pressed", String(b.getAttribute("data-theme-set") === next)));
+  emit("theme", next);
+}
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("[data-theme-toggle]");
+  if (!t) return;
+  const v = t.getAttribute("data-theme-set");
+  setTheme(v || (document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light"));
+});
+if (document.documentElement.getAttribute("data-theme") === "light") { const m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute("content", "#F3F5F9"); }
 
 /* ------------------------------------------------------------------ ads
    Same rules as the Android app (settings come from the server: Telegram /ads):

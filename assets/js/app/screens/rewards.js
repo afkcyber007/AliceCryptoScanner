@@ -83,8 +83,8 @@ export async function spin(ctx) {
     let token;
     try { token = (await api("/api/coins/spin/start", { method: "POST" })).token; }
     catch (e) { busy = false; msg = ""; draw(); toast(e.message); return; }
-    if (plan() === "free") await sponsoredBreak(6, "Your spin is almost ready");
-    else await new Promise((r) => setTimeout(r, 5200));     // the server needs a few seconds between start and spin
+    // every plan (Free, Premium and Elite) sees the short sponsored message before a spin
+    await sponsoredBreak(6, "Your spin is almost ready", plan() !== "free");
     try {
       const r = await api("/api/coins/spin", { method: "POST", body: { token } });
       const n = d.spin.wheel.length, seg = 360 / n;

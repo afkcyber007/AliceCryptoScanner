@@ -202,6 +202,76 @@ def stop_loss():
 
 
 # --------------------------------------------------------------------------- covers (Pillow)
+def order_block_fvg():
+    p = walk([(0, 12), (18, 11.0), (24, 10.2), (27, 10.0), (34, 12.6), (44, 13.4), (52, 12.0), (58, 11.3), (75, 14.6), (90, 15.8)], 91, 0.16, 21)
+    fig, ax = plt.subplots(figsize=(7.4, 3.9))
+    setup(ax, "Order block, fair value gap and break of structure")
+    o = ohlc_from(p, 21)
+    candles(ax, o)
+    ax.add_patch(Rectangle((24.5, o[25:28, 2].min()), 34, o[25:28, 1].max() - o[25:28, 2].min(), color=BULL, alpha=.16, lw=0))
+    ax.set_ylim(o[:, 2].min() - 1.0, o[:, 1].max() + .4)
+    label(ax, 36, o[25:28, 2].min() - .6, "Bullish order block (last down candle)", c=BULL, s=7.5)
+    lo, hi = o[29, 1], o[31, 2]
+    if hi > lo:
+        ax.add_patch(Rectangle((29.5, lo), 30, hi - lo, color=BLUE, alpha=.2, lw=0))
+        label(ax, 44, (lo + hi) / 2, "Fair value gap", c=BLUE, s=7.5)
+    prev_high = o[:24, 1].max()
+    ax.axhline(prev_high, xmin=.05, xmax=.5, color=GOLD, ls="--", lw=1)
+    label(ax, 14, prev_high + .15, "Break of structure", c=GOLD, s=7.5)
+    label(ax, 60, o[56:60, 2].min() - .5, "Price returns: entry", c=GOLD, s=7.5)
+    save(fig, "order_block_fvg.webp")
+
+
+def breakout_fakeout():
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(7.6, 3.4))
+    for ax, real, seed in ((a1, True, 31), (a2, False, 32)):
+        base = [(0, 10), (12, 11.6), (22, 10.3), (34, 11.7), (44, 10.4), (52, 11.6)]
+        tail = [(58, 12.7), (64, 12.3), (72, 13.6)] if real else [(57, 12.2), (62, 11.0), (72, 9.8)]
+        p = walk(base + tail, 73, 0.06, seed)
+        setup(ax, "Real breakout" if real else "Fakeout (bull trap)")
+        candles(ax, ohlc_from(p, seed))
+        ax.set_ylim(9.5, 14.4)
+        ax.axhline(11.8, color=GOLD, ls="--", lw=1)
+        label(ax, 22, 11.95, "Resistance", s=7.5)
+        if real:
+            label(ax, 52, 13.85, "Close above + volume", c=BULL, s=7.5)
+            label(ax, 64, 11.4, "Retest holds", c=BULL, s=7.5)
+        else:
+            label(ax, 50, 12.75, "Wick above, close back inside", c=BEAR, s=7.5)
+    save(fig, "breakout_fakeout.webp")
+
+
+def btc_levels():
+    p = walk([(0, 60), (14, 64.5), (24, 62), (36, 67.5), (46, 64.2), (58, 69.8), (70, 66.1), (84, 71), (90, 70.2)], 91, 0.35, 41)
+    fig, ax = plt.subplots(figsize=(7.4, 3.9))
+    setup(ax, "BTC/USDT 4H: support, resistance and the next targets (example)")
+    candles(ax, ohlc_from(p, 41))
+    for y, c, t in ((64.2, BULL, "Support 1: higher low"), (61.8, BULL, "Support 2: demand zone"), (69.9, BEAR, "Resistance: previous high"), (73.0, GOLD, "Target if 70k breaks")):
+        ax.axhline(y, color=c, ls="--", lw=1)
+        ax.annotate(t, (1, y + .25), color=c, fontsize=7.5, fontweight="bold")
+    ax.plot(ema(p, 21), color=GOLD, lw=1.2, alpha=.8)
+    ax.set_ylabel("Price (thousand USDT)", color=TXT, fontsize=7.5)
+    save(fig, "btc_levels.webp")
+
+
+def futures_liquidation():
+    fig, ax = plt.subplots(figsize=(7.4, 3.5))
+    setup(ax, "Long BTC at 70,000: where liquidation sits for each leverage")
+    entry = 70000
+    levs = [2, 5, 10, 20, 50]
+    for i, lv in enumerate(levs):
+        liq = entry * (1 - 1 / lv + 0.005)
+        ax.barh(i, entry - liq, left=liq, color=[BULL, BLUE, GOLD, "#F59E0B", BEAR][i], alpha=.75)
+        ax.annotate(f"{lv}x: liquidation ≈ {liq:,.0f} ({(entry - liq) / entry * 100:.1f}% away)", (liq - 700, i), color=TXT, fontsize=7.5, va="center", ha="right")
+    ax.axvline(entry, color=TXT, lw=1, ls="--")
+    ax.set_yticks(range(len(levs)))
+    ax.set_yticklabels([f"{v}x" for v in levs], color=TXT, fontsize=8)
+    ax.set_xlim(0, entry * 1.03)
+    ax.annotate("Entry 70,000", (entry, -0.6), color=TXT, fontsize=7.5, ha="right")
+    ax.invert_yaxis()
+    save(fig, "futures_liquidation.webp")
+
+
 FONT_DIR = Path("/usr/share/fonts/opentype/inter")
 CAT_COLORS = {"forex": (59, 167, 255), "crypto": (124, 92, 255), "gold": (245, 185, 65), "strategy": (22, 199, 132), "basics": (236, 115, 80)}
 CAT_NAMES = {"forex": "FOREX", "crypto": "CRYPTO", "gold": "GOLD", "strategy": "STRATEGY", "basics": "TRADING BASICS"}
@@ -283,6 +353,50 @@ def cover(slug, title, category):
     img.save(dest, quality=82, method=6)
 
 
+NEWS = {"crypto": ("CRYPTO NEWS", "Bitcoin, Ethereum & altcoins", (124, 92, 255), "₿"),
+        "forex": ("FOREX NEWS", "Central banks, CPI, jobs & currencies", (59, 167, 255), "$€"),
+        "gold": ("GOLD NEWS", "XAU/USD, the dollar & safe havens", (245, 185, 65), "Au"),
+        "stocks": ("US STOCKS NEWS", "S&P 500, Nasdaq, Dow & earnings", (22, 199, 132), "▲")}
+
+
+def news_cover(cat):
+    """Pictures for the news pages and the Telegram bot when a headline has no image of its own."""
+    title, sub, acc, mark = NEWS[cat]
+    W, H = 1200, 675
+    img = Image.new("RGB", (W, H), (9, 12, 20))
+    glow = Image.new("RGB", (W, H), (0, 0, 0))
+    g = ImageDraw.Draw(glow)
+    g.ellipse((620, -260, 1500, 620), fill=tuple(int(c * .6) for c in acc))
+    g.ellipse((-260, 380, 520, 1100), fill=(28, 38, 66))
+    img = Image.blend(img, glow.filter(ImageFilter.GaussianBlur(150)), .65)
+    d = ImageDraw.Draw(img)
+    rnd = random.Random(cat)
+    x0, y0, x1, y1 = 640, 150, 1140, 560
+    for i in range(6):
+        y = y0 + (y1 - y0) * i / 5
+        d.line((x0, y, x1, y), fill=(32, 40, 58), width=2)
+    p, pts = 50.0, []
+    for i in range(40):
+        p += rnd.gauss(.35 if cat != "forex" else 0.1, 1.6)
+        pts.append(p)
+    lo, hi = min(pts), max(pts)
+    xy = [(x0 + (x1 - x0) * i / 39, y1 - (v - lo) / (hi - lo) * (y1 - y0)) for i, v in enumerate(pts)]
+    d.line(xy, fill=acc, width=6, joint="curve")
+    d.polygon(xy + [(x1, y1), (x0, y1)], fill=tuple(int(c * .18) for c in acc))
+    d.line(xy, fill=acc, width=6, joint="curve")
+    tf = font("b", 24)
+    d.rounded_rectangle((70, 80, 70 + d.textlength("LIVE · ALICE", font=tf) + 40, 124), 22, fill=(234, 57, 67))
+    d.text((90, 88), "LIVE · ALICE", font=tf, fill=(255, 255, 255))
+    d.text((70, 170), title, font=font("x", 76 if len(title) < 12 else 62), fill=(242, 245, 250))
+    d.text((72, 270), sub, font=font("s", 32), fill=(190, 198, 214))
+    d.text((70, 560), "aliceforexcryptoscanner.com/news", font=font("s", 26), fill=acc)
+    big = font("x", 150)
+    d.text((W - 70 - d.textlength(mark, font=big), 410), mark, font=big, fill=tuple(int(c * .55) for c in acc))
+    dest = ROOT / "static" / "img" / "news" / f"{cat}.webp"
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    img.save(dest, quality=84, method=6)
+
+
 def front(text):
     meta = {}
     if text.startswith("---"):
@@ -295,12 +409,29 @@ def front(text):
 
 
 def main():
-    src = Path(sys.argv[1]) if len(sys.argv) > 1 else None
+    if "--new-art" in sys.argv:
+        for fn in (order_block_fvg, breakout_fakeout, btc_levels, futures_liquidation):
+            fn()
+        print("new diagrams written")
+        return
+    if "--covers" in sys.argv:
+        for p in sorted((ROOT / "content" / "articles").glob("*.md")):
+            if not (OUT / "cover" / f"{p.stem}.webp").exists():
+                m = front(p.read_text(encoding="utf-8"))
+                cover(p.stem, re.sub(r"\s+", " ", m.get("h1") or m.get("title", p.stem)), m.get("category", "basics").lower())
+        print("missing covers written")
+        return
+    if "--news" in sys.argv:
+        for c in NEWS:
+            news_cover(c)
+        print("news images written")
+        return
+    src = Path(sys.argv[1]) if len(sys.argv) > 1 and not sys.argv[1].startswith("--") else None
     if src and src.is_dir():
         (OUT / "edu").mkdir(parents=True, exist_ok=True)
         for p in sorted(src.glob("*.png")):
             Image.open(p).convert("RGB").save(OUT / "edu" / (p.stem + ".webp"), quality=88, method=6)
-    for fn in (ma_crossover, macd, bollinger, trading_styles, forex_quote, stop_loss):
+    for fn in (ma_crossover, macd, bollinger, trading_styles, forex_quote, stop_loss, order_block_fvg, breakout_fakeout, btc_levels, futures_liquidation):
         fn()
     for p in sorted((ROOT / "content" / "articles").glob("*.md")):
         m = front(p.read_text(encoding="utf-8"))

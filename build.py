@@ -90,6 +90,10 @@ ICONS = {
     "telegram": _svg('<path d="m22 3-20 8 7 2.5M22 3l-4 18-9-7.5M22 3 9 13.5v6l3.5-4"/>'),
     "globe": _svg('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>'),
     "lock": _svg('<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>'),
+    "moon": _svg('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>', ' class="moon"'),
+    "sun": _svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>', ' class="sun"'),
+    "tgfill": ('<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9.8 15.4 9.6 19c.4 0 .6-.2.8-.4l1.9-1.8 4 2.9c.7.4 '
+               '1.3.2 1.5-.7l2.7-12.6c.3-1.1-.4-1.6-1.1-1.3L3.6 10.9c-1.1.4-1.1 1-.2 1.3l4 1.2 9.3-5.9c.4-.3.8-.1.5.2"/></svg>'),
 }
 
 # --------------------------------------------------------------------------- tools
@@ -188,7 +192,11 @@ def shortcodes(body: str) -> str:
     app = (f'<div class="callout"><b>See it live in Alice</b><p>The Alice scanner scores every crypto, forex, gold and index market '
            f'from 0 to 100 on every timeframe, so you can spot these setups in seconds.</p>'
            f'<a class="btn btn-gold btn-sm" href="{BASE}app/">Open the free web app</a></div>')
-    return body.replace("<p>[[app]]</p>", app)
+    body = body.replace("<p>[[app]]</p>", app)
+    # [[tg:forex]] [[tg:robot]] [[tg:vip]] [[tg:join]] [[tg:bot]] → big Telegram buttons · [[cta:gold]] → "Click here to get the tool"
+    body = re.sub(r"<p>\[\[tg:([a-z]+)\]\]</p>", lambda m: tg_cta(m.group(1)), body)
+    body = re.sub(r"<p>\[\[cta:([a-z]+)\]\]</p>", lambda m: tool_cta(m.group(1)), body)
+    return body
 
 
 def split_faq(body_md: str) -> tuple[str, list[tuple[str, str]]]:
@@ -327,13 +335,14 @@ def write_page(path: str, *, title: str, description: str, body: str, nav: str =
         "body_class": body_class, "ad_bottom": f'<div class="wrap">{ad("slot-bottom")}</div>' if ad_bottom and ad("slot-bottom") else "",
         "lang": lang, "dir": "rtl" if lang in RTL_LANGS else "ltr", "alternates": alternates, "app": app_url(lang),
         "home": BASE + lang_home(lang), "channel": esc(SITE.get("telegram_channel", "")),
+        "join": esc(SITE.get("telegram_join", "")), "bot": esc(SITE.get("telegram_bot", "")),
         "lang_font": (f'<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family={LANG_FONTS[lang]}&display=swap">'
                       if lang in LANG_FONTS else ""),
         "lang_menu": "".join(f'<a href="{BASE}{lang_home(c)}" hreflang="{c}" lang="{c}"{" aria-current=\"true\"" if c == lang else ""}>{n}</a>'
                              for c, n in SITE_LANGS),
         "lang_code": lang.upper(),
     }
-    for key in ("scanner", "tools", "learn", "pricing", "download"):
+    for key in ("scanner", "tools", "learn", "news", "pricing", "download"):
         ctx[f"nav_{key}"] = ' aria-current="page"' if nav == key else ""
     html_out = localize(render(read(TPL / "base.html"), ctx), lang)
     dest = OUT / path / "index.html" if not path.endswith(".html") else OUT / path
@@ -543,6 +552,7 @@ def load_articles() -> list[dict]:
             "category": meta.get("category", "basics").lower(), "keywords": meta.get("keywords", ""),
             "tools": [t.strip() for t in meta.get("tools", "").split(",") if t.strip()],
             "md": main_md, "faq": faq, "minutes": max(3, -(-words // 200)), "h1": meta.get("h1", meta.get("title", slug)),
+            "cta": meta.get("cta", ""),
         })
     arts.sort(key=lambda a: a["date"], reverse=True)
     return arts
@@ -588,6 +598,14 @@ def build_articles(arts: list[dict]) -> None:
             parts = re.split(r"(?=<h2 )", body, maxsplit=1)
             if len(parts) == 2:
                 body = parts[0] + top + parts[1]
+        # every guide gets a "Click here to get the tool" box and a Telegram channel box (unless it places its own)
+        if "tool-cta" not in body:
+            parts = re.split(r"(?=<h2 )", body)
+            at = 2 if len(parts) > 4 else len(parts)
+            parts.insert(at, tool_cta(a.get("cta") or a["category"]))
+            body = "".join(parts)
+        if "tg-cta" not in body:
+            body += tg_cta("forex" if a["category"] in ("forex", "gold") else "join")
         if a["faq"]:
             body += f'<h2 id="faq">Frequently asked questions</h2>{faq_html(a["faq"])}'
             toc.append(("faq", "Frequently asked questions"))
@@ -621,6 +639,7 @@ def build_articles(arts: list[dict]) -> None:
     <aside>
       <nav class="toc" aria-label="In this guide"><b>In this guide</b><ol>{toc_items}</ol></nav>
       <div class="side-card"><b>Scan the market with Alice</b><p>Every crypto, forex and gold market scored from 0 to 100, live.</p><a class="btn btn-gold btn-sm" href="{BASE}app/">Open the web app</a></div>
+      {tg_side()}
       {ad("slot-sidebar", "ad-side")}
     </aside>
   </div>
@@ -705,7 +724,7 @@ def build_tools() -> None:
     crumbs = [("Home", ""), ("Free tools", "tools/")]
     body = f'''<div class="wrap"><header class="page-head">{crumbs_html(crumbs)}<h1>Free trading tools</h1>
 <p class="lead">Calculators and market tools for forex, crypto and gold traders. They run in your browser, need no account and work on any phone.</p></header>
-<div class="tool-list" style="padding-bottom:40px">{tool_links_html()}</div>
+<div class="tool-list" style="padding-bottom:40px"><a class="tool-link" href="{BASE}currency-strength-meter/"><span class="ic" aria-hidden="true">💪</span><span><b>Currency strength meter</b><span>Live USD, EUR, GBP, JPY strength plus forex and crypto peak hours</span></span></a>{tool_links_html()}</div>
 <div class="cta-band" style="margin-bottom:72px"><div><h2>Want the pro tools too?</h2><p>The web app adds the live scanner, AI chart analyzer, alerts, whale radar, journal and portfolio tracker.</p></div>
 <div class="btns"><a class="btn btn-gold" href="{BASE}app/#/tools">Open the pro tools</a></div></div></div>'''
     write_page("tools/", title="Free trading calculators and tools for forex, crypto and gold | Alice Forex/Crypto Scanner",
@@ -739,6 +758,7 @@ def build_home(arts: list[dict], lang: str) -> None:
         "ad_home": f'<div class="wrap">{ad("slot-home")}</div>' if ad("slot-home") else "",
         "free_tools": free_tools_html(app), "pro_tools": pro_tools_html(app), "compare": compare_html(), "lessons": lessons_html(app),
         "channel": esc(SITE.get("telegram_channel", "")), "tg": esc(SITE.get("telegram_support", "")),
+        "join": esc(SITE.get("telegram_join", "")), "bot": esc(SITE.get("telegram_bot", "")),
     })
     app_ld = {"@type": "SoftwareApplication", "name": "Alice Forex/Crypto Scanner", "operatingSystem": "Android, iOS, Web",
               "applicationCategory": "FinanceApplication", "url": url(), "image": url("static/img/icons/icon-512.png"),
@@ -816,6 +836,311 @@ def build_special(arts: list[dict]) -> None:
                robots="noindex", sitemap=None)
 
 
+# --------------------------------------------------------------------------- news pages (filled live from the server)
+NEWS_CATS = [
+    # id, menu name, emoji, h1, title, description, intro, tools [(label, app route)], faq
+    ("crypto", "Crypto news", "₿", "Latest crypto news today",
+     "Crypto news today: Bitcoin, Ethereum and altcoin headlines | Alice Forex/Crypto Scanner",
+     "Latest crypto news today with pictures: Bitcoin, Ethereum, ETFs, regulation and altcoins. High-impact headlines marked, with what they mean for the market.",
+     "Bitcoin, Ethereum, ETF flows, regulation, hacks and the altcoin market, updated around the clock. Every headline shows its source, and the big market movers are marked as high impact so you can check the chart before the crowd reacts.",
+     [("Crypto market scanner", "#/scanner"), ("BTC deep analysis", "#/btc"), ("Whale radar", "#/activity"), ("Funding and open interest", "#/funding")],
+     [("How often is the crypto news updated?", "The page refreshes from leading crypto news sites every few minutes. News older than 15 days is removed, so you always see what matters now."),
+      ("What does high impact mean?", "Headlines about central banks, ETF decisions, regulation, hacks, crashes or record prices often move the whole crypto market. Alice marks them so you can check the Bitcoin chart and your open positions."),
+      ("How do I trade crypto news?", "Do not chase the first candle. Check the higher timeframe trend in the Alice scanner, wait for the first reaction to settle, and always use a stop loss sized with the position size calculator.")]),
+    ("forex", "Forex news", "💱", "Latest forex news today",
+     "Forex news today: live currency market headlines | Alice Forex/Crypto Scanner",
+     "Latest forex news today: Fed, ECB, BoE and BoJ decisions, CPI, NFP and currency market headlines. High-impact news marked with the pairs it can move.",
+     "Central bank decisions, inflation and jobs data, and the headlines that move EUR/USD, GBP/USD, USD/JPY and the dollar. Pair the news with the currency strength meter to see which currencies are really moving.",
+     [("Currency strength meter", "#/strength"), ("Economic calendar", "#/calendar"), ("Forex scanner", "#/scanner"), ("Risk calculator", "#/risk")],
+     [("Which forex news moves the market most?", "Interest-rate decisions (Fed, ECB, BoE, BoJ), US CPI inflation and non-farm payrolls are the biggest. Check the economic calendar for the exact time in your time zone."),
+      ("Should I trade during news?", "Spreads widen and price can jump in both directions. Many traders wait 15 to 30 minutes after a release and trade the new direction once it is confirmed."),
+      ("How long is the forex news kept here?", "The latest 15 days. Older headlines are removed automatically and a headline is never shown twice.")]),
+    ("gold", "Gold news", "🥇", "Latest gold news today (XAU/USD)",
+     "Gold news today: XAU/USD price headlines | Alice Forex/Crypto Scanner",
+     "Latest gold news today: XAU/USD price drivers, the dollar, US yields, central bank buying and safe-haven demand. High-impact headlines marked.",
+     "Gold reacts to the US dollar, real yields, inflation data, central bank buying and geopolitical risk. Read the headline, then check the daily gold verdict and trade plan in Alice before you act.",
+     [("Gold deep analysis", "#/gold"), ("Gold scanner", "#/scanner"), ("Economic calendar", "#/calendar"), ("Fibonacci and pivots", "#/fib")],
+     [("What moves the gold price?", "The US dollar, real interest rates, inflation expectations, central bank purchases and risk sentiment. A weaker dollar and falling yields usually support gold."),
+      ("When is gold most volatile?", "During the London and New York sessions and around US data such as CPI, payrolls and Fed decisions."),
+      ("Where can I see a gold trade plan?", "Open the Gold deep analysis in the Alice web app: a daily verdict with key levels, entry zone, stop loss and targets.")]),
+    ("stocks", "US stocks news", "📈", "Latest US stock market news today",
+     "US stock market news today: S&P 500, Nasdaq and Dow headlines | Alice Forex/Crypto Scanner",
+     "Latest US stock market news today: S&P 500, Nasdaq and Dow Jones, earnings, the Fed and big tech. High-impact headlines marked.",
+     "Earnings, the Fed, inflation and big tech drive the S&P 500, Nasdaq and Dow. Stock market moods also spill into crypto and the dollar, so these headlines matter for every trader.",
+     [("US stocks and indices scanner", "#/scanner"), ("Economic calendar", "#/calendar"), ("AI chart analyzer", "#/ai"), ("Price alerts", "#/alerts")],
+     [("Why should crypto and forex traders follow stock news?", "Risk appetite is shared. A sell-off in the Nasdaq often hits Bitcoin and lifts the yen and the dollar, while strong stocks usually support crypto."),
+      ("Which stock news moves the market most?", "Fed decisions, CPI inflation, payrolls and earnings from the largest companies such as Apple, Microsoft, Nvidia, Amazon and Alphabet."),
+      ("Can I scan US stocks in Alice?", "Yes. Premium and Elite include US stocks and indices in the scanner with a score from 0 to 100 on every timeframe.")]),
+]
+
+
+def build_news() -> None:
+    chips = lambda cur: "".join(  # noqa: E731
+        f'<a class="chip" href="{BASE}news/{"" if c == "" else c + "/"}"{" aria-current=\"page\"" if c == cur else ""}>{esc(n)}</a>'
+        for c, n in [("", "All news")] + [(x[0], x[1]) for x in NEWS_CATS])
+    side = f'''<div class="side-card"><b>Check the chart before you trade the news</b><p>The Alice scanner scores every crypto, forex, gold and stock market from 0 to 100.</p><a class="btn btn-gold btn-sm" href="{BASE}app/#/scanner">Open the scanner</a></div>
+      {tg_cta("join")}{ad("slot-sidebar", "ad-side")}'''
+    for cid, name, emo, h1, title, desc, intro, tools, faq in NEWS_CATS:
+        crumbs = [("Home", ""), ("News", "news/"), (name, f"news/{cid}/")]
+        tl = "".join(f'<a class="tool-link" href="{BASE}app/{r}"><span class="ic" aria-hidden="true">{emo}</span><span><b>{esc(n)}</b><span>Open in the Alice web app</span></span></a>' for n, r in tools)
+        body = f'''<div class="wrap">
+  <header class="page-head">{crumbs_html(crumbs)}<h1>{esc(h1)}</h1><p class="lead">{esc(intro)}</p></header>
+  <div class="chips">{chips(cid)}</div>
+  {ad("slot-top")}
+  <div class="layout">
+    <article>
+      <div class="news-grid" data-news="{cid}" aria-live="polite"><div class="news-skel"></div><div class="news-skel"></div><div class="news-skel"></div><div class="news-skel"></div></div>
+      <p class="note news-note">Headlines and short summaries come from the original publishers; tap a story for the full article at its source. News older than 15 days is removed automatically.</p>
+      {tool_cta(cid)}
+      <section class="related"><h2>Tools for {esc(name.lower())}</h2><div class="tool-list">{tl}</div></section>
+      <h2 style="margin-top:48px">Questions about {esc(name.lower())}</h2>{faq_html(faq)}
+    </article>
+    <aside>{side}</aside>
+  </div>
+</div>'''
+        write_page(f"news/{cid}/", title=title, description=desc, body=body, nav="news",
+                   jsonld=ld(ORG, crumbs_ld(crumbs), faq_ld(faq), {"@type": "CollectionPage", "name": h1, "url": url(f"news/{cid}/")}),
+                   extra_js=f'<script src="{BASE}assets/js/news.js?v={VERSION}" defer></script>', sitemap=("0.8", ""),
+                   og_image=f"static/img/news/{cid}.webp")
+    # hub
+    crumbs = [("Home", ""), ("News", "news/")]
+    cards = "".join(f'''<a class="news-cat" href="{BASE}news/{c[0]}/"><img src="{BASE}static/img/news/{c[0]}.webp" width="800" height="450" alt="" loading="lazy">
+      <span><b>{c[2]} {esc(c[1])}</b><small>{esc(c[6][:110].rsplit(" ", 1)[0])}…</small></span></a>''' for c in NEWS_CATS)
+    body = f'''<div class="wrap">
+  <header class="page-head">{crumbs_html(crumbs)}<h1>Latest market news today</h1>
+  <p class="lead">Crypto, forex, gold and US stock market headlines with pictures, updated around the clock. The high-impact stories that can move the market are marked, and every headline links to its original source.</p></header>
+  <div class="chips">{chips("")}</div>
+  <div class="news-cats">{cards}</div>
+  {ad("slot-top")}
+  <div class="layout">
+    <article>
+      <h2>High-impact headlines right now</h2>
+      <div class="news-grid" data-news="top" aria-live="polite"><div class="news-skel"></div><div class="news-skel"></div><div class="news-skel"></div><div class="news-skel"></div></div>
+      {tool_cta("news")}
+    </article>
+    <aside>{side}</aside>
+  </div>
+</div>'''
+    write_page("news/", title="Latest market news today: crypto, forex, gold and US stocks | Alice Forex/Crypto Scanner",
+               description="Latest crypto, forex, gold and US stock market news with pictures. High-impact headlines marked, with what they mean for traders. Updated around the clock.",
+               body=body, nav="news", jsonld=ld(ORG, crumbs_ld(crumbs)),
+               extra_js=f'<script src="{BASE}assets/js/news.js?v={VERSION}" defer></script>', sitemap=("0.9", ""), og_image="static/img/news/crypto.webp")
+    # reader (one story)
+    crumbs = [("Home", ""), ("News", "news/"), ("Story", "news/read/")]
+    body = f'''<div class="wrap">
+  <header class="page-head">{crumbs_html(crumbs)}</header>
+  <div class="layout">
+    <article><div id="news-reader"><div class="news-skel tall"></div></div>
+      {ad("slot-article")}
+      <div id="news-tools"></div>
+      {tg_cta("join")}
+      <section class="related"><h2 id="news-more-h">More market news</h2><div class="news-grid" id="news-more"></div></section>
+    </article>
+    <aside>{side}</aside>
+  </div>
+</div>'''
+    write_page("news/read/", title="Market news | Alice Forex/Crypto Scanner", description="Market news story with what it means for traders.",
+               body=body, nav="news", robots="noindex,follow", sitemap=None,
+               extra_js=f'<script src="{BASE}assets/js/news.js?v={VERSION}" defer></script>')
+
+
+def tg_side() -> str:
+    """Telegram buttons in the article sidebar."""
+    items = [("telegram_join", "Join our Telegram Channel", "tg-s-join"), ("forex_channel", "Forex & gold channel", "tg-s-fx"),
+             ("robot_channel", "Automatic Trading Robot", "tg-s-robot"), ("vip_support", "VIP trades on Telegram", "tg-s-vip"),
+             ("telegram_bot", "AliceCryptoScanner Bot", "tg-s-bot")]
+    links = "".join(f'<a class="tg-s {c}" href="{esc(SITE.get(k, ""))}" target="_blank" rel="noopener">{ICONS["tgfill"]}<span>{esc(t)}</span></a>'
+                    for k, t, c in items if SITE.get(k))
+    return f'<div class="side-card tg-side"><b>Join us on Telegram</b>{links}</div>' if links else ""
+
+
+def tg_cta(kind: str) -> str:
+    """Big Telegram buttons used in articles and pages: join (main channel), forex, robot, vip."""
+    TG = ICONS["tgfill"]
+    data = {
+        "join": ("", SITE.get("telegram_join", ""), "Join our Telegram Channel", "Free daily analysis, key levels and market updates from the Alice team.", "Join now"),
+        "forex": ("", SITE.get("forex_channel", ""), "Join our Forex Telegram channel", "Daily forex and gold (XAU/USD) setups with entry, stop loss and targets, plus market news.", "Join the forex channel"),
+        "robot": ("robot", SITE.get("robot_channel", ""), "Automatic Trading Robot (MT4/MT5 EA)", "See our automatic trading robot, its live results and how to run it on your own account.", "See the trading robot"),
+        "vip": ("vip", SITE.get("vip_support", ""), "Want VIP trades on Telegram?", "Get entries and exits on Telegram and join the VIP discussion room. Message our support team to join.", "Join VIP on Telegram"),
+        "bot": ("", SITE.get("telegram_bot", ""), "AliceCryptoScanner Bot", "Every Alice tool in one Telegram menu, plus high-impact market news as it happens.", "Open the bot"),
+    }
+    cls, link, title, text, btn = data[kind]
+    if not link:
+        return ""
+    return (f'<div class="tg-cta {cls}"><span class="tg-ic">{TG}</span><div><b>{esc(title)}</b><p>{esc(text)}</p></div>'
+            f'<a class="btn" href="{esc(link)}" target="_blank" rel="noopener">{esc(btn)}</a></div>')
+
+
+# Which Alice tools to offer for an article category / topic: (title, text, tier, app route)
+TOOL_CTAS = {
+    "crypto": ("Scan every crypto pair with Alice", "Scores from 0 to 100 on every timeframe, whale radar, funding and open interest, and Best Trades with entry, stop loss and targets.", "Free + Elite", "#/scanner"),
+    "forex": ("Find the strongest forex setups", "Forex scanner, currency strength meter, sessions and the economic calendar with AI impact analysis.", "Free + Premium", "#/strength"),
+    "gold": ("Get today's gold trade plan", "Daily XAU/USD verdict with key levels, entry zone, stop loss and two targets. 7-day free trial.", "Elite", "#/gold"),
+    "strategy": ("Let Alice find the setups", "Best Trades: the top setups in every market with entry, stop loss and two targets, updated all day.", "Elite", "#/best"),
+    "basics": ("Practise with the free tools", "Position size and risk calculator, Fibonacci, pivots, alerts and the trading academy.", "Free", "#/tools"),
+    "news": ("Turn the news into a plan", "Check the scanner score, the economic calendar and the AI chart analyzer before you trade the headline.", "Free", "#/calendar"),
+    "stocks": ("Scan US stocks and indices", "S&P 500, Nasdaq, Dow and the biggest US stocks scored from 0 to 100 on every timeframe.", "Premium", "#/scanner"),
+    "ai": ("Try the AI chart analyzer", "Upload a chart or pick a pair: trend, key levels and a trade idea in seconds.", "Free 1 a day", "#/ai"),
+    "smc": ("See smart money concepts on the chart", "Order blocks, fair value gaps, liquidity and break of structure drawn on every chart.", "Premium", "#/scanner"),
+    "signals": ("Best Trades: our ready-made setups", "The strongest setups in crypto, forex and gold with entry, stop loss and two targets.", "Elite", "#/best"),
+    "futures": ("Futures tools in one place", "Liquidation price, funding rates, open interest and the whale radar.", "Premium", "#/funding"),
+}
+
+
+def tool_cta(kind: str) -> str:
+    t = TOOL_CTAS.get(kind) or TOOL_CTAS["basics"]
+    return (f'<div class="tool-cta"><div><b>{esc(t[0])} <span class="tag gold">{esc(t[2])}</span></b><p>{esc(t[1])}</p></div>'
+            f'<a class="btn btn-gold" href="{BASE}app/{t[3]}">Click here to get the tool</a></div>')
+
+
+# --------------------------------------------------------------------------- currency strength + best exchanges pages
+EXCHANGES = [  # facts from independent 2026 reviews (cryptonews.com, forexbrokers.com, daytrading.com) — platforms change, check before you sign up
+    {"id": "bitunix", "name": "Bitunix", "cat": "crypto", "color": "#B6F23E", "url": "https://www.bitunix.com/register?vipCode=c2ss",
+     "tag": "Best for crypto futures", "bonus": "Welcome rewards up to 1,200 USDT for new users (platform terms apply)",
+     "facts": [("Founded", "2021"), ("Markets", "300+ spot coins, 400+ USDT perpetual futures"), ("Futures fees", "0.02% maker / 0.06% taker"),
+               ("Spot fees", "0.08% maker / 0.10% taker"), ("Max leverage", "Up to 125x on futures"), ("Copy trading", "Yes, about 2,000 lead traders")],
+     "pros": ["Low futures fees and a fast, simple futures interface", "Copy trading with no extra copy fee (lead traders take a profit share)",
+              "Multi-signature custody, 2FA, anti-phishing code and withdrawal password", "Staking, dual investment and reward tasks for new users"],
+     "cons": ["Not available in the US, Canada and some other countries", "Full KYC is required"]},
+    {"id": "bingx", "name": "BingX", "cat": "crypto", "color": "#2A54FF", "url": "https://bingxdao.com/invite/BIALC3/",
+     "tag": "Best for copy trading", "bonus": "New-user rewards up to 900 USDT after sign-up and verification (platform terms apply)",
+     "facts": [("Founded", "2018"), ("Markets", "700+ spot coins, 500+ futures pairs"), ("Futures fees", "0.02% maker / 0.05% taker"),
+               ("Spot fees", "0.1%"), ("Max leverage", "Up to 125x on BTC and ETH"), ("Copy trading", "Yes, 15,000+ elite traders")],
+     "pros": ["One of the largest copy-trading platforms, with filters by ROI, drawdown and risk", "Proof of reserves published regularly",
+              "Spot, perpetual and standard futures, grid bots and a demo account", "Over 20 million users in 100+ countries"],
+     "cons": ["Restricted in the US, UK, Canada and some other markets", "A hot-wallet hack was reported in 2024, so turn on every security option"]},
+    {"id": "icmarkets", "name": "IC Markets", "cat": "forex", "color": "#3D8BFD", "url": "https://icmarkets.com/?camp=82974",
+     "tag": "Best for low forex spreads", "bonus": "Raw spreads from 0.0 pips on MetaTrader 4, MetaTrader 5, cTrader and TradingView",
+     "facts": [("Regulation", "ASIC (Australia), CySEC (EU) and offshore entities"), ("Minimum deposit", "$200"),
+               ("Raw account", "From 0.0 pips + $3.50 per side per lot"), ("Standard account", "No commission, from about 0.8 pips"),
+               ("Platforms", "MT4, MT5, cTrader, TradingView"), ("Markets", "Forex, gold, indices, oil, stocks and crypto CFDs")],
+     "pros": ["Some of the lowest all-in trading costs for forex and gold", "Excellent for expert advisors (EAs) and algorithmic trading",
+              "Free VPS for qualifying traders", "Thousands of symbols"],
+     "cons": ["No own platform or Mac desktop app", "Inactivity fee after six months without trading"]},
+    {"id": "exness", "name": "Exness", "cat": "forex", "color": "#FFD200", "url": "https://one.exnesstrack.org/a/o6h1j4gy9b",
+     "tag": "Best for fast withdrawals", "bonus": "Low minimum deposit, instant withdrawals on many payment methods",
+     "facts": [("Regulation", "FSCA, FSA, CySEC and FCA (B2B) entities and others"), ("Minimum deposit", "From $10 (Standard)"),
+               ("Accounts", "Standard, Standard Cent, Pro, Raw Spread, Zero"), ("Spreads", "Standard from 0.2 pips, no commission"),
+               ("Platforms", "MT4, MT5, Exness Terminal, Exness Trade app"), ("Withdrawals", "Often instant for cards and e-wallets")],
+     "pros": ["Very low minimum deposit and cent accounts for beginners", "Fast withdrawals and many local payment methods",
+              "40+ account currencies", "Strong for gold (XAU/USD) traders"],
+     "cons": ["Most international clients join an offshore entity", "Not available in the US, UK, EU and some other countries"]},
+]
+
+
+def build_strength_and_exchanges() -> None:
+    # ---- currency strength meter + forex peak hours + crypto peak hours
+    meta, text = front_matter(read(CONTENT / "special" / "currency-strength-meter.md"))
+    main_md, faq = split_faq(text)
+    body_html, _ = md_to_html(main_md)
+    crumbs = [("Home", ""), ("Free tools", "tools/"), ("Currency strength meter", "currency-strength-meter/")]
+    hours = render(read(TPL / "tools" / "hours.html"), {"base": BASE, "api": API})
+    page = f'''<div class="wrap">
+  <header class="page-head">{crumbs_html(crumbs)}<h1>{esc(meta["h1"])}</h1><p class="lead">{esc(meta["intro"])}</p></header>
+  <section class="tool-box csm" id="csm" aria-label="Currency strength meter">
+    <div class="csm-head"><h2>Currency strength now</h2><div class="chips" role="group" aria-label="Timeframe">
+      <button class="chip" type="button" data-csm-tf="1h" aria-pressed="true">1H</button><button class="chip" type="button" data-csm-tf="4h" aria-pressed="false">4H</button><button class="chip" type="button" data-csm-tf="1d" aria-pressed="false">1D</button></div></div>
+    <a class="csm-idea" id="csm-idea" hidden></a>
+    <div class="csm-bars" id="csm-bars"><div class="news-skel" style="min-height:280px"></div></div>
+    <p class="note" id="csm-note">Strength from 0 to 10 against the other seven majors. Live from the Alice server, updated every minute.</p>
+  </section>
+  {ad("slot-top")}
+  <section class="tool-box" data-tool="hours" aria-label="Forex peak hours"><h2 style="margin-top:0">Forex peak hours: sessions in your time zone</h2>{hours}</section>
+  <section class="tool-box" aria-label="Crypto peak hours" style="margin-top:20px">
+    <div class="csm-head"><h2 style="margin:0">Crypto peak hours: Bitcoin volume by hour</h2><div class="chips" role="group"><button class="chip" type="button" data-ch-local="1" aria-pressed="true">My time</button><button class="chip" type="button" data-ch-local="0" aria-pressed="false">UTC</button></div></div>
+    <div id="crypto-hours"><div class="news-skel" style="min-height:220px"></div></div>
+  </section>
+  {tool_cta("forex")}
+  <div class="layout">
+    <article><div class="prose">{shortcodes(body_html)}</div>
+      {tg_cta("forex")}
+      <h2 style="margin-top:48px">Frequently asked questions</h2>{faq_html(faq)}
+      <section class="related"><h2>More free tools</h2><div class="tool-list">{tool_links_html()}</div></section>
+    </article>
+    <aside><div class="side-card"><b>Trade the strongest against the weakest</b><p>The Alice scanner scores every forex pair, gold and crypto from 0 to 100.</p><a class="btn btn-gold btn-sm" href="{BASE}app/#/strength">Open in the web app</a></div>
+      {tg_cta("join")}{ad("slot-sidebar", "ad-side")}</aside>
+  </div>
+</div>'''
+    app_ld = {"@type": "WebApplication", "name": "Currency strength meter", "url": url("currency-strength-meter/"),
+              "applicationCategory": "FinanceApplication", "operatingSystem": "Any", "isAccessibleForFree": True,
+              "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "description": meta["description"]}
+    write_page("currency-strength-meter/", title=meta["title"], description=meta["description"], body=page, nav="tools",
+               jsonld=ld(ORG, app_ld, crumbs_ld(crumbs), faq_ld(faq)),
+               extra_js=f'<script src="{BASE}assets/js/tools.js?v={VERSION}" defer></script><script src="{BASE}assets/js/strength.js?v={VERSION}" defer></script>',
+               sitemap=("0.9", ""))
+
+    # ---- best exchanges and brokers
+    meta, text = front_matter(read(CONTENT / "special" / "best-forex-crypto-exchanges.md"))
+    main_md, faq = split_faq(text)
+    body_html, _ = md_to_html(main_md)
+    crumbs = [("Home", ""), ("Best exchanges and brokers", "best-forex-crypto-exchanges/")]
+    def card(x):
+        facts = "".join(f"<tr><th scope=\"row\">{esc(k)}</th><td>{esc(v)}</td></tr>" for k, v in x["facts"])
+        pros = "".join(f"<li>{ICONS['check']}<span>{esc(p)}</span></li>" for p in x["pros"])
+        cons = "".join(f"<li><span class=\"x\">–</span><span>{esc(c)}</span></li>" for c in x["cons"])
+        return f'''<section class="exc" id="{x['id']}" style="--acc:{x['color']}">
+  <div class="exc-head"><span class="exc-logo">{esc(x['name'][0])}</span><div><h3>{esc(x['name'])}</h3><span class="tag {'gold' if x['cat'] == 'crypto' else 'sky'}">{'Crypto exchange' if x['cat'] == 'crypto' else 'Forex broker'}</span> <span class="tag">{esc(x['tag'])}</span></div></div>
+  <p class="exc-bonus">🎁 {esc(x['bonus'])}</p>
+  <div class="table-wrap"><table class="exc-facts"><tbody>{facts}</tbody></table></div>
+  <div class="exc-pc"><div><b>Why traders choose it</b><ul class="ticks">{pros}</ul></div><div><b>Good to know</b><ul class="ticks cons">{cons}</ul></div></div>
+  <a class="btn btn-gold" href="{esc(x['url'])}" target="_blank" rel="noopener sponsored">Sign up with {esc(x['name'])}</a>
+</section>'''
+    rows = "".join(f"<tr><th scope=\"row\"><a href=\"#{x['id']}\">{esc(x['name'])}</a></th><td>{'Crypto' if x['cat'] == 'crypto' else 'Forex & gold'}</td>"
+                   f"<td>{esc(dict(x['facts']).get('Futures fees') or dict(x['facts']).get('Raw account') or dict(x['facts']).get('Spreads', ''))}</td>"
+                   f"<td>{esc(x['tag'])}</td><td><a class=\"btn btn-gold btn-sm\" href=\"{esc(x['url'])}\" target=\"_blank\" rel=\"noopener sponsored\">Sign up</a></td></tr>" for x in EXCHANGES)
+    page = f'''<div class="wrap">
+  <header class="page-head">{crumbs_html(crumbs)}<h1>{esc(meta["h1"])}</h1><p class="lead">{esc(meta["intro"])}</p></header>
+  <div class="cta-band" style="margin-bottom:28px"><div><h2 style="font-size:1.4rem">🎁 Get Alice Premium or Elite free</h2><p>Sign up through our links (or already trade there through our link), then send your exchange UID to our support team.</p></div>
+    <div class="btns"><a class="btn btn-gold" href="{esc(SITE.get('telegram_support', ''))}" target="_blank" rel="noopener">Claim free access</a></div></div>
+  <div class="table-wrap compare"><table><thead><tr><th scope="col">Platform</th><th scope="col">For</th><th scope="col">Costs</th><th scope="col">Best for</th><th scope="col"></th></tr></thead><tbody>{rows}</tbody></table></div>
+  {ad("slot-top")}
+  <h2 style="margin-top:40px">Crypto exchanges</h2>
+  <div class="exc-grid">{"".join(card(x) for x in EXCHANGES if x["cat"] == "crypto")}</div>
+  <h2 style="margin-top:40px">Forex and gold brokers</h2>
+  <div class="exc-grid">{"".join(card(x) for x in EXCHANGES if x["cat"] == "forex")}</div>
+  <div id="exc-more" data-known="{",".join(x["id"] for x in EXCHANGES)}"></div>
+  <p class="note">Facts from independent reviews (2026) and the platforms' own websites. Fees, bonuses and availability change and differ by country, so please check the platform before you sign up. These are partner links: Alice may earn a commission at no extra cost to you.</p>
+  <div class="layout" style="margin-top:32px">
+    <article><div class="prose">{body_html}</div>
+      {tg_cta("vip")}
+      <h2 style="margin-top:48px">Frequently asked questions</h2>{faq_html(faq)}</article>
+    <aside><div class="side-card"><b>Find the trade first</b><p>Use the Alice scanner to find the strongest setups, then trade them on your exchange or broker.</p><a class="btn btn-gold btn-sm" href="{BASE}app/#/scanner">Open the scanner</a></div>
+      {tg_cta("join")}{ad("slot-sidebar", "ad-side")}</aside>
+  </div>
+</div>'''
+    write_page("best-forex-crypto-exchanges/", title=meta["title"], description=meta["description"], body=page,
+               jsonld=ld(ORG, crumbs_ld(crumbs), faq_ld(faq), {"@type": "ItemList", "name": meta["h1"], "itemListElement": [
+                   {"@type": "ListItem", "position": i + 1, "name": x["name"], "url": url(f"best-forex-crypto-exchanges/#{x['id']}")} for i, x in enumerate(EXCHANGES)]}),
+               extra_js=f'<script src="{BASE}assets/js/strength.js?v={VERSION}" defer></script>', sitemap=("0.9", ""))
+
+
+BOT_TOOLS = [  # short labels for the public Telegram bot (two buttons per row)
+    ("📡 Market Scanner", "app:#/scanner"), ("🏆 Best Trades", "app:#/best"),
+    ("🥇 Gold & BTC Analysis", "app:#/gold"), ("🐋 Whale Radar", "app:#/activity"),
+    ("🤖 AI Chart Analyzer", "app:#/ai"), ("🔔 Price Alerts", "app:#/alerts"),
+    ("💪 Currency Strength", "site:currency-strength-meter/"), ("⏰ Market Hours", "site:tools/forex-market-hours/"),
+    ("📅 Economic Calendar", "app:#/calendar"), ("📰 Latest News", "site:news/"),
+    ("🧮 Risk Calculator", "app:#/risk"), ("📐 Fibonacci & Pivots", "app:#/fib"),
+    ("📊 Funding & OI", "app:#/funding"), ("📔 Journal & Portfolio", "app:#/journal"),
+    ("🎓 Trading Academy", "app:#/academy"), ("💬 Discussion Rooms", "app:#/chat/crypto"),
+    ("🎡 Spin & Earn", "app:#/spin"), ("🏦 Best Exchanges", "site:best-forex-crypto-exchanges/"),
+    ("🧰 Free Calculators", "site:tools/"), ("📚 Trading Guides", "site:learn/"),
+]
+
+
+def build_bot_menu() -> None:
+    """bot-menu.json: the tool buttons of the public Telegram bot (the server reads it every 6 hours).
+    Any tool added to FREE_TOOLS / PRO_TOOLS (home page) that is not in BOT_TOOLS is added automatically."""
+    out = [{"label": label, "target": target} for label, target in BOT_TOOLS]
+    have = {t for _, t in BOT_TOOLS} | {"app:#/strength", "app:#/hours"}   # shown as the website pages above
+    for e, n, *rest in FREE_TOOLS + PRO_TOOLS:
+        target = "app:" + rest[-1]
+        if target not in have:
+            have.add(target)
+            out.append({"label": f"{e} {n}"[:30], "target": target})
+    (OUT / "bot-menu.json").write_text(json.dumps({"updated": TODAY.isoformat(), "tools": out}, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
 def build_app() -> None:
     """The web app (single page) lives at /app/ and talks to the VPS server."""
     tpl = read(TPL / "app.html")
@@ -829,6 +1154,7 @@ def build_app() -> None:
                        "slot_spin": json.dumps(read(ROOT / "ads" / "slot-spin.html").strip()).replace("</", "<\\/"),
                        "slot_interstitial": json.dumps(read(ROOT / "ads" / "slot-interstitial.html").strip()).replace("</", "<\\/"),
                        "channel": esc(SITE.get("telegram_channel", "")),
+                       "join": esc(SITE.get("telegram_join", "")), "bot": esc(SITE.get("telegram_bot", "")),
                        "analytics": ""})
     (OUT / "app").mkdir(parents=True, exist_ok=True)
     (OUT / "app" / "index.html").write_text(out, encoding="utf-8")
@@ -936,6 +1262,9 @@ def main() -> None:
     build_tools()
     build_articles(arts)
     build_pages()
+    build_news()
+    build_strength_and_exchanges()
+    build_bot_menu()
     build_app()
     build_meta()
     print(f"Built {len(SITEMAP)} pages into {OUT} — site {SITE_URL}{BASE} · server {API} · version {VERSION}")

@@ -34,12 +34,16 @@ export async function profile(ctx) {
     <section class="panel"><div class="panel-head"><h2>Settings</h2></div><div class="list">
       ${row("#/notifications", "🔔", "Notifications", html`<span class="tag ${push.enabled() ? "bull" : ""}" style="margin-right:6px">${push.enabled() ? "On" : "Off"}</span>`)}
       ${row("#/language", "🌐", "Language", html`<span class="note" style="margin-right:6px">${(LANGS.find((l) => l[0] === lang) || LANGS[0])[1]}</span>`)}
+      <div class="li theme-row"><span class="with-ic"><span class="lead-ic">🎨</span><span class="t">Appearance</span></span>
+        <span class="seg" role="group" aria-label="Appearance"><button type="button" data-theme-toggle data-theme-set="dark" aria-pressed="${document.documentElement.getAttribute("data-theme") !== "light"}">🌙 Dark</button><button type="button" data-theme-toggle data-theme-set="light" aria-pressed="${document.documentElement.getAttribute("data-theme") === "light"}">☀️ Light</button></span></div>
     </div></section>
     <section class="panel"><div class="panel-head"><h2>Get the app</h2></div><div class="list">
       ${row("#/install", isIos ? "🍏" : "📲", isIos ? "Install on iPhone" : "Install Alice", html`<span class="note" style="margin-right:6px">${isIos ? "Home Screen" : "Android, iPhone, PC"}</span>`)}
     </div></section>
     <section class="panel"><div class="panel-head"><h2>Help and community</h2></div><div class="list">
       ${row(tg, "💬", "Telegram support", "", 'target="_blank" rel="noopener"')}
+      ${A.join ? row(A.join, "✈️", "Join our Telegram Channel", html`<span class="tag sky" style="margin-right:6px">Telegram</span>`, 'target="_blank" rel="noopener"') : ""}
+      ${A.bot ? row(A.bot, "🤖", "AliceCryptoScanner Bot", html`<span class="tag sky" style="margin-right:6px">Telegram</span>`, 'target="_blank" rel="noopener"') : ""}
       ${row(A.channel || "https://t.me/AliceCryptoPro_Official", "📣", "Daily analysis channel", html`<span class="tag gold" style="margin-right:6px">Telegram</span>`, 'target="_blank" rel="noopener"')}
       ${row("#/contact", "✉️", "Contact")}
       <button type="button" class="li" data-share><span class="with-ic"><span class="lead-ic">🤝</span><span class="t">Share Alice with a friend</span></span><span class="r">${icon.chev}</span></button>

@@ -1,17 +1,17 @@
 /* Market news and the economic calendar. */
-import { html, raw, api, session, isPaid, qs, ago, dateTime, toMs, skeleton, errorBox, toast } from "../core.js";
+import { A, html, raw, api, session, isPaid, qs, ago, dateTime, toMs, skeleton, errorBox, toast } from "../core.js";
 import { md } from "../components.js";
 
 export async function news(ctx) {
-  ctx.top({ title: "Market news", sub: "Forex, gold and crypto headlines" });
+  ctx.top({ title: "Market news", sub: "Crypto, forex, gold and US stocks" });
   let cat = ctx.query.cat || "crypto", range = "all", d = null, err = null;
   const draw = () => ctx.render(html`
-    <div class="tabs" role="group">${[["crypto", "Crypto"], ["forex", "Forex"], ["gold", "Gold and commodities"]].map(([id, n]) => html`<button type="button" data-cat="${id}" aria-pressed="${id === cat}">${n}</button>`)}</div>
+    <div class="tabs" role="group">${[["crypto", "Crypto"], ["forex", "Forex"], ["gold", "Gold and commodities"], ["stocks", "US stocks"]].map(([id, n]) => html`<button type="button" data-cat="${id}" aria-pressed="${id === cat}">${n}</button>`)}</div>
     <div class="tabs small" role="group">${[["all", "Latest"], ["today", "Today"], ["week", "This week"], ["prev_week", "Last week"], ["month", "This month"]].map(([id, n]) => html`<button type="button" data-range="${id}" aria-pressed="${id === range}">${n}</button>`)}</div>
     <section class="panel">${err ? errorBox(err) : !d ? skeleton(8) : !(d.items || []).length ? html`<div class="empty"><b>No headlines right now</b>The news feeds are refreshing. Try again in a few minutes.</div>`
-      : html`<div class="list">${d.items.map((n) => html`<a class="li" href="${n.link}" target="_blank" rel="noopener" style="grid-template-columns:${n.image ? "72px " : ""}minmax(0,1fr)">
-        ${n.image ? html`<img src="${n.image}" alt="" loading="lazy" style="width:72px;height:52px;object-fit:cover;border-radius:10px">` : ""}
-        <span><span class="t" style="white-space:normal;line-height:1.35">${n.title}</span><span class="s">${n.source}, ${ago(n.published_at)}</span></span></a>`)}</div>`}
+      : html`<div class="list">${d.items.map((n) => html`<a class="li" href="${(A.base || "/") + "news/read/?id=" + n.id}" style="grid-template-columns:${n.image ? "72px " : ""}minmax(0,1fr)">
+        ${n.image ? html`<img src="${n.image}" alt="" loading="lazy" referrerpolicy="no-referrer" style="width:72px;height:52px;object-fit:cover;border-radius:10px">` : ""}
+        <span><span class="t" style="white-space:normal;line-height:1.35">${n.impact >= 3 ? html`<span class="tag bear" style="margin-right:6px">High impact</span>` : ""}${n.title}</span><span class="s">${n.source}, ${ago(n.published_at)}</span></span></a>`)}</div>`}
     </section>${d && d.source_note ? html`<p class="note">${d.source_note}</p>` : ""}`);
   const load = async () => { try { d = await api("/api/news" + qs({ cat, range }), { auth: false }); err = null; } catch (e) { err = e; } if (ctx.alive) draw(); };
   ctx.on("[data-cat]", "click", (e, b) => { cat = b.dataset.cat; d = null; draw(); load(); });

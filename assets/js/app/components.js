@@ -97,7 +97,7 @@ export const isElite = () => session.user && session.user.plan === "elite";
 
 /** Short sponsored break used where the Android app shows a rewarded video (spins, bonus analyses).
  *  Shows the "slot-spin" ad code from the website's ads folder (or a house message) for `seconds`. */
-export function sponsoredBreak(seconds = 6, title = "Your reward is almost ready") {
+export function sponsoredBreak(seconds = 6, title = "Your reward is almost ready", paid = false) {
   return new Promise((resolve) => {
     const A = window.ALICE || {};
     const code = (A.slots && A.slots.spin) || "";
@@ -105,7 +105,9 @@ export function sponsoredBreak(seconds = 6, title = "Your reward is almost ready
     const bg = document.createElement("div");
     bg.className = "sheet-bg";
     bg.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-label="Sponsored"><h2>${esc(title)}</h2>
-      <div class="ad-wait" id="sb-slot">${code ? "" : '<b style="color:var(--text)">Go ad-free with Premium</b><p style="margin:6px 0 0">Premium members never see ads and get every market and timeframe.</p>'}</div>
+      <div class="ad-wait" id="sb-slot">${code ? "" : paid
+        ? `<b style="color:var(--text)">Free daily analysis on Telegram</b><p style="margin:6px 0 10px">Gold, Bitcoin and forex outlook every day.</p>${A.join ? `<a class="btn btn-line btn-sm" href="${A.join}" target="_blank" rel="noopener">Join our Telegram Channel</a>` : ""}`
+        : '<b style="color:var(--text)">Go ad-free with Premium</b><p style="margin:6px 0 0">Premium members never see full-screen ads and get every market and timeframe.</p>'}</div>
       <p class="note center" style="margin:12px 0 0" id="sb-count">Please wait ${seconds} seconds</p>
       <button class="btn btn-gold btn-block" style="margin-top:12px" id="sb-go" disabled>Continue</button></div>`;
     root.appendChild(bg);
