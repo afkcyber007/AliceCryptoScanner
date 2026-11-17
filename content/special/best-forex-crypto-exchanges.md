@@ -1,7 +1,7 @@
 ---
-title: Best Forex Brokers and Crypto Exchanges 2026 (Compared) | Alice Forex/Crypto Scanner
+title: Best Forex Brokers and Crypto Exchanges {year} (Compared)
 description: The best crypto exchanges and forex brokers used by Alice traders: Bitunix, BingX, IC Markets and Exness compared on fees, leverage, platforms, copy trading and safety. Sign up and get Alice Premium free.
-h1: Best forex brokers and crypto exchanges
+h1: Best forex brokers and crypto exchanges in {year}
 intro: The platforms Alice traders use for crypto futures, copy trading, forex and gold, compared side by side. Open your account through our links and you can get Alice Premium or Elite free.
 ---
 ## How we chose these platforms

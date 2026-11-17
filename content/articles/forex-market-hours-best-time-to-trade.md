@@ -1,5 +1,5 @@
 ---
-title: Forex Market Hours: The Best Time to Trade Forex in 2026
+title: Forex Market Hours: The Best Time to Trade Forex in {year}
 description: When is the forex market open? A clear guide to the Sydney, Tokyo, London and New York sessions, the overlaps that move the most, and the hours to avoid.
 date: 2026-10-15
 category: forex

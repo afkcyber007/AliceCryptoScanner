@@ -250,7 +250,12 @@ def crumbs_html(items: list[tuple[str, str]]) -> str:
 
 ORG = {"@type": "Organization", "@id": url("#org"), "name": "Alice Forex/Crypto Scanner", "url": url(),
        "logo": url("static/img/icons/icon-512.png"),
-       "sameAs": [u for u in (SITE.get("telegram_channel"), SITE.get("twitter_url"), SITE.get("google_play_url")) if u]}
+       "description": SITE.get("description", ""),
+       "contactPoint": {"@type": "ContactPoint", "contactType": "customer support", "url": SITE.get("telegram_support", ""),
+                        "email": SITE.get("contact_email", ""), "availableLanguage": ["en", "ur", "hi", "ar", "zh", "es", "pt", "fr", "ru", "tr"]},
+       "sameAs": list(dict.fromkeys(u for u in (SITE.get("telegram_channel"), SITE.get("telegram_join"), SITE.get("telegram_bot"),
+                                                SITE.get("forex_channel"), SITE.get("twitter_url"), SITE.get("google_play_url"),
+                                                SITE.get("youtube_url"), SITE.get("facebook_url")) if u))}
 
 
 # --------------------------------------------------------------------------- page writer
@@ -344,12 +349,69 @@ def write_page(path: str, *, title: str, description: str, body: str, nav: str =
     }
     for key in ("scanner", "tools", "learn", "news", "pricing", "download"):
         ctx[f"nav_{key}"] = ' aria-current="page"' if nav == key else ""
-    html_out = localize(render(read(TPL / "base.html"), ctx), lang)
+    html_out = seo_fit(localize(render(read(TPL / "base.html"), ctx), lang), path)
     dest = OUT / path / "index.html" if not path.endswith(".html") else OUT / path
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_text(html_out, encoding="utf-8")
     if sitemap:
         SITEMAP.append((path, sitemap[1] or TODAY.isoformat(), sitemap[0]))
+
+
+# --------------------------------------------------------------------------- SEO checks (every page)
+SEO_REPORT: list[str] = []
+BRAND_SUFFIXES = (" | Alice Forex/Crypto Scanner", " | Alice Forex Crypto Scanner", " | Alice Scanner", " - Alice Forex/Crypto Scanner")
+
+
+def _fit_title(t: str) -> str:
+    t = t.replace("{year}", str(TODAY.year))
+    if len(t) <= 65:
+        return t
+    if t.startswith("Alice Forex/Crypto Scanner"):
+        t = "Alice Scanner" + t[len("Alice Forex/Crypto Scanner"):]
+        if len(t) <= 65:
+            return t
+    for suf in BRAND_SUFFIXES:
+        if t.endswith(suf):
+            core = t[: -len(suf)]
+            if len(core + " | Alice Scanner") <= 65:
+                return core + " | Alice Scanner"
+            t = core
+            break
+    if len(t) <= 65:
+        return t
+    cut = t[:64]
+    for sep in (": ", " – ", " - ", ", "):
+        if sep in cut[30:]:
+            return cut[: cut.rindex(sep)].rstrip()
+    return cut.rsplit(" ", 1)[0].rstrip(" ,:;-–") + "…"
+
+
+def _fit_desc(d: str) -> str:
+    d = d.replace("{year}", str(TODAY.year))
+    if len(d) <= 155:
+        return d
+    cut = d[:155]
+    end = max(cut.rfind(". "), cut.rfind("! "), cut.rfind("? "))
+    if end >= 90:
+        return cut[: end + 1]
+    return cut[:152].rsplit(" ", 1)[0].rstrip(" ,:;-–") + "…"
+
+
+def seo_fit(doc: str, path: str) -> str:
+    """Keeps every title at 65 characters or less and every description at 155 or less (Google's display limits),
+    fills in {year}, and notes pages that break the rules in SEO_REPORT."""
+    def fix(rx, fn, group_doc):
+        return re.sub(rx, lambda m: m.group(1) + esc(fn(html.unescape(m.group(2)))) + m.group(3), group_doc)
+    doc = fix(r'(<title>)(.*?)(</title>)', _fit_title, doc)
+    doc = fix(r'(<meta property="og:title" content=")([^"]*)(")', _fit_title, doc)
+    doc = fix(r'(<meta name="twitter:title" content=")([^"]*)(")', _fit_title, doc)
+    for name in ('name="description"', 'property="og:description"', 'name="twitter:description"'):
+        doc = fix(r'(<meta ' + name + r' content=")([^"]*)(")', _fit_desc, doc)
+    doc = doc.replace("{year}", str(TODAY.year))
+    if 'content="noindex' not in doc and path != "404.html":
+        if len(re.findall(r"<h1[\s>]", doc)) != 1:
+            SEO_REPORT.append(f"{path}: needs exactly one <h1>")
+    return doc
 
 
 # --------------------------------------------------------------------------- shared blocks
@@ -644,7 +706,9 @@ def build_articles(arts: list[dict]) -> None:
     </aside>
   </div>
 </div>'''
-        art_ld = {"@type": "Article", "headline": a["title"], "description": a["description"], "datePublished": a["date"],
+        art_ld = {"@type": "BlogPosting", "headline": a["title"], "author": {"@type": "Organization", "name": "Alice Forex/Crypto Scanner team", "url": url("about/")},
+                  "publisher": {"@type": "Organization", "name": "Alice Forex/Crypto Scanner", "logo": {"@type": "ImageObject", "url": url("static/img/icons/icon-512.png")}},
+                  "inLanguage": "en", "keywords": a.get("keywords", ""), "description": a["description"], "datePublished": a["date"],
                   "dateModified": a["updated"], "mainEntityOfPage": url(f"learn/{a['slug']}/"), "image": url(cover_path(a) or "static/img/og-image.png"),
                   "author": {"@type": "Organization", "name": "Alice Forex/Crypto Scanner", "url": url()},
                   "publisher": {"@id": url("#org")}, "articleSection": cat_name, "keywords": a["keywords"]}
@@ -770,7 +834,8 @@ def build_home(arts: list[dict], lang: str) -> None:
     faq_items = [(localize(f"[[{q}]]", lang), localize(f"[[{a}]]", lang)) for q, a in HOME_FAQ]
     alternates = "\n".join(f'<link rel="alternate" hreflang="{c}" href="{url(lang_home(c))}">' for c, _ in SITE_LANGS) + \
         f'\n<link rel="alternate" hreflang="x-default" href="{url()}">'
-    title = localize("[[Alice Forex/Crypto Scanner: free crypto, forex and gold market scanner]]", lang)
+    title = ("Free Crypto, Forex & Gold Scanner | Alice Forex/Crypto Scanner" if lang == "en" else
+             localize("[[Alice Forex/Crypto Scanner: free crypto, forex and gold market scanner]]", lang))
     desc = localize("[[Free crypto, forex and gold market scanner. Every market scored 0–100, Best Trades, Gold & BTC deep analysis, alerts and pro trading tools. Works on Android, iPhone and desktop.]]", lang)
     write_page(lang_home(lang), title=title, og_title="Alice Forex/Crypto Scanner", description=desc,
                body=localize(body, lang), jsonld=ld(ORG, website, app_ld, faq_ld(faq_items)),
@@ -1083,11 +1148,11 @@ def build_strength_and_exchanges() -> None:
   <p class="exc-bonus">🎁 {esc(x['bonus'])}</p>
   <div class="table-wrap"><table class="exc-facts"><tbody>{facts}</tbody></table></div>
   <div class="exc-pc"><div><b>Why traders choose it</b><ul class="ticks">{pros}</ul></div><div><b>Good to know</b><ul class="ticks cons">{cons}</ul></div></div>
-  <a class="btn btn-gold" href="{esc(x['url'])}" target="_blank" rel="noopener sponsored">Sign up with {esc(x['name'])}</a>
+  <a class="btn btn-gold" href="{esc(x['url'])}" target="_blank" rel="sponsored nofollow noopener">Sign up with {esc(x['name'])}</a>
 </section>'''
     rows = "".join(f"<tr><th scope=\"row\"><a href=\"#{x['id']}\">{esc(x['name'])}</a></th><td>{'Crypto' if x['cat'] == 'crypto' else 'Forex & gold'}</td>"
                    f"<td>{esc(dict(x['facts']).get('Futures fees') or dict(x['facts']).get('Raw account') or dict(x['facts']).get('Spreads', ''))}</td>"
-                   f"<td>{esc(x['tag'])}</td><td><a class=\"btn btn-gold btn-sm\" href=\"{esc(x['url'])}\" target=\"_blank\" rel=\"noopener sponsored\">Sign up</a></td></tr>" for x in EXCHANGES)
+                   f"<td>{esc(x['tag'])}</td><td><a class=\"btn btn-gold btn-sm\" href=\"{esc(x['url'])}\" target=\"_blank\" rel=\"sponsored nofollow noopener\">Sign up</a></td></tr>" for x in EXCHANGES)
     page = f'''<div class="wrap">
   <header class="page-head">{crumbs_html(crumbs)}<h1>{esc(meta["h1"])}</h1><p class="lead">{esc(meta["intro"])}</p></header>
   <div class="cta-band" style="margin-bottom:28px"><div><h2 style="font-size:1.4rem">🎁 Get Alice Premium or Elite free</h2><p>Sign up through our links (or already trade there through our link), then send your exchange UID to our support team.</p></div>
@@ -1187,7 +1252,18 @@ def build_meta() -> None:
     (OUT / "sitemap.xml").write_text(
         f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{entries}</urlset>',
         encoding="utf-8")
-    (OUT / "robots.txt").write_text(f"User-agent: *\nAllow: /\n\nSitemap: {url('sitemap.xml')}\n", encoding="utf-8")
+    # Every search engine and AI search crawler may read the site; the small ad frames under /a/ are not pages.
+    bots = ["Googlebot", "Bingbot", "OAI-SearchBot", "ChatGPT-User", "GPTBot", "PerplexityBot", "ClaudeBot",
+            "Claude-SearchBot", "Google-Extended", "Applebot", "DuckDuckBot", "YandexBot"]
+    robots = "".join(f"User-agent: {b}\nAllow: /\nDisallow: /a/\n\n" for b in bots)
+    robots += f"User-agent: *\nAllow: /\nDisallow: /a/\n\nSitemap: {url('sitemap.xml')}\n"
+    (OUT / "robots.txt").write_text(robots, encoding="utf-8")
+    key = (SITE.get("indexnow_key") or "").strip()
+    if re.fullmatch(r"[A-Za-z0-9-]{8,128}", key):          # IndexNow: tells Bing, Yandex, Seznam … about new pages
+        (OUT / f"{key}.txt").write_text(key, encoding="utf-8")
+    (OUT / "urls.txt").write_text("\n".join(url(p) for p, _, _ in SITEMAP) + "\n", encoding="utf-8")
+    if SEO_REPORT:
+        print("SEO check:\n  " + "\n  ".join(SEO_REPORT))
     build_android_ads()
     ads_txt = read(ROOT / "ads" / "ads.txt").strip()
     if ads_txt:
@@ -1215,6 +1291,34 @@ def build_meta() -> None:
     domain = (SITE.get("domain") or "").strip().removeprefix("https://").removeprefix("http://").strip("/")
     if domain:
         (OUT / "CNAME").write_text(domain + "\n", encoding="utf-8")
+
+
+def build_ai_files(arts: list[dict]) -> None:
+    """llms.txt (a plain summary that ChatGPT, Perplexity, Claude and Gemini can read) and an RSS feed of the guides."""
+    lines = [f"# {SITE['name']}", "",
+             f"> {SITE['description']}", "",
+             "Alice Forex/Crypto Scanner is a market scanner and trading-analysis app for crypto, forex, gold, indices and US stocks. "
+             "It scores every market from 0 to 100 on every timeframe, lists Best Trades with entry, stop loss and targets, "
+             "and includes Gold and BTC deep analysis, an AI chart analyzer, a whale radar, price alerts, a currency strength meter, "
+             "forex and crypto peak hours, an economic calendar, live market news, 20 free trading calculators and a 48-lesson academy. "
+             "It works on the web, Android and iPhone with one account, in 10 languages. Plans: Free, Premium and Elite.", "",
+             "## Main pages",
+             f"- [Home]({url('')}): what Alice does, plans and download",
+             f"- [Web app]({url('app/')}): the scanner in the browser, free sign-up",
+             f"- [Pricing]({url('pricing/')}): Free, Premium and Elite compared",
+             f"- [Download]({url('download/')}): Android APK, Google Play and iPhone",
+             f"- [Currency strength meter]({url('currency-strength-meter/')}): live USD, EUR, GBP, JPY, AUD, NZD, CAD, CHF strength, forex and crypto peak hours",
+             f"- [Best exchanges and brokers]({url('best-forex-crypto-exchanges/')}): Bitunix, BingX, IC Markets and Exness compared",
+             f"- [Market news]({url('news/')}): crypto, forex, gold and US stock headlines",
+             f"- [Free trading tools]({url('tools/')}): position size, pip value, margin, liquidation, Fibonacci, pivots and more",
+             f"- [Trading guides]({url('learn/')}): {len(arts)} guides for beginners and active traders", "",
+             "## Trading guides"]
+    lines += [f"- [{a['title'].replace('{year}', str(TODAY.year))}]({url('learn/' + a['slug'] + '/')}): {a['description'].replace('{year}', str(TODAY.year))}"
+              for a in sorted(arts, key=lambda x: x["date"], reverse=True)]
+    lines += ["", "## Contact", f"- Telegram support: {SITE.get('telegram_support', '')}", f"- Email: {SITE.get('contact_email', '')}",
+              "", "Risk warning: trading carries a high risk of loss. Alice provides market information and education, not financial advice."]
+    (OUT / "llms.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
 
 
 LANG_ORDER = ["ur", "hi", "ar", "zh", "es", "pt", "fr", "ru", "tr"]   # same order as the Android app's I18n.kt
@@ -1267,6 +1371,7 @@ def main() -> None:
     build_bot_menu()
     build_app()
     build_meta()
+    build_ai_files(arts)
     print(f"Built {len(SITEMAP)} pages into {OUT} — site {SITE_URL}{BASE} · server {API} · version {VERSION}")
 
 

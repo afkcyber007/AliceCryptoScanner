@@ -1,5 +1,5 @@
 ---
-title: Currency Strength Meter Live: Forex Strength, Forex Peak Hours and Crypto Peak Hours
+title: Currency Strength Meter (Live, Free) + Forex & Crypto Peak Hours
 description: Free live currency strength meter for USD, EUR, GBP, JPY, AUD, NZD, CAD and CHF on 1H, 4H and 1D, plus forex peak hours by session and crypto peak hours by volume, in your time zone.
 h1: Currency Strength Meter (live)
 intro: See which currencies are strong and which are weak right now, when the forex market is busiest, and the peak hours of the crypto market, all in your own time zone.
