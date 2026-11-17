@@ -1,9 +1,13 @@
 name: Publish website
 
 # Runs on every change. If you uploaded AliceWebsite.zip (or "AliceWebsite (1).zip"), it is unpacked first.
+# Also runs on the 1st of every month, so dates, the year in titles and the sitemap stay fresh.
+# After every publish, Bing / Yandex (IndexNow) are told which pages exist.
 on:
   push:
     branches: [ main ]
+  schedule:
+    - cron: "17 3 1 * *"
   workflow_dispatch:
 
 permissions:
@@ -64,3 +68,25 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  indexnow:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tell Bing and other IndexNow search engines about the pages
+        run: |
+          sleep 60
+          DOMAIN=$(python3 -c "import json;print(json.load(open('site.json')).get('domain','').strip())")
+          KEY=$(python3 -c "import json;print(json.load(open('site.json')).get('indexnow_key','').strip())")
+          if [ -z "$DOMAIN" ] || [ -z "$KEY" ]; then echo "No domain or IndexNow key in site.json"; exit 0; fi
+          curl -fsSL "https://$DOMAIN/urls.txt" -o urls.txt || { echo "urls.txt not reachable yet"; exit 0; }
+          python3 - "$DOMAIN" "$KEY" <<'PY'
+          import json, sys
+          domain, key = sys.argv[1], sys.argv[2]
+          urls = [u.strip() for u in open("urls.txt") if u.strip()][:10000]
+          json.dump({"host": domain, "key": key, "keyLocation": f"https://{domain}/{key}.txt", "urlList": urls}, open("body.json", "w"))
+          print(len(urls), "pages")
+          PY
+          curl -sS -o /dev/null -w "IndexNow answered HTTP %{http_code}\n" -H "Content-Type: application/json; charset=utf-8" \
+            --data @body.json https://api.indexnow.org/indexnow || true
