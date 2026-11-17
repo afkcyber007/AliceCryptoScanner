@@ -13,7 +13,7 @@ export async function upgrade(ctx) {
   ctx.top({ title: "Upgrade", sub: "Premium and Elite" });
   const cfg = (await loadConfig()) || {};
   const plans = cfg.plans && cfg.plans.length ? cfg.plans : [
-    { id: "premium", label: "Premium", monthly: 19.99, yearly: 149.99, features: [] }, { id: "elite", label: "Elite", monthly: 39.99, yearly: 299.99, features: [] }];
+    { id: "premium", label: "Premium", monthly: 10, yearly: 70, features: [] }, { id: "elite", label: "Elite", monthly: 15, yearly: 90, features: [] }];
   const cur = plan();
   let pid = ctx.query.plan === "premium" || ctx.query.plan === "elite" ? ctx.query.plan : cur === "premium" ? "elite" : "elite";
   let period = ctx.query.period === "monthly" ? "monthly" : "yearly";

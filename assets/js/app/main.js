@@ -61,7 +61,7 @@ const SIDE = [
   ["", [["home", "#/home", "Home", icon.home], ["scanner", "#/scanner", "Scanner", icon.radar], ["best", "#/best", "Best Trades", icon.trophy, "elite"], ["tools", "#/tools", "All tools", icon.grid]]],
   ["Analysis", [["gold", "#/gold", "Gold deep analysis", icon.gold, "elite"], ["btc", "#/btc", "BTC deep analysis", icon.btc, "elite"], ["ai", "#/ai", "AI chart analyzer", icon.ai], ["activity", "#/activity", "Whale radar", icon.whale, "elite"]]],
   ["Market", [["alerts", "#/alerts", "Alerts", icon.bell], ["calendar", "#/calendar", "Economic calendar", icon.cal], ["news", "#/news", "News", icon.news], ["hours", "#/strength", "Strength and hours", icon.clock], ["chat", "#/chat/crypto", "Discussion rooms", icon.chat]]],
-  ["You", [["rewards", "#/rewards", "Rewards and coins", icon.coin], ["spin", "#/spin", "Spin and earn", icon.wheel], ["journal", "#/journal", "Trading journal", icon.journal], ["academy", "#/academy", "Academy", icon.book], ["exchanges", "#/exchanges", "Best exchanges", icon.bank]]],
+  ["You", [["rewards", "#/rewards", "Rewards and coins", icon.coin], ["spin", "#/spin", "Spin and earn", icon.wheel], ["journal", "#/journal", "Trading journal", icon.journal], ["academy", "#/academy", "Academy", icon.book], ["exchanges", "#/exchanges", "Best exchanges", icon.bank], ["robots", (A.base || "/") + "trading-robots/", "Trading robots (EA)", icon.ai]]],
   ["Settings", [["notifications", "#/notifications", "Notifications", icon.bell], ["language", "#/language", "Language", icon.globe], ["profile", "#/profile", "Profile", icon.user]]],
 ];
 function drawShell(activeTab, path) {
@@ -75,10 +75,13 @@ function drawShell(activeTab, path) {
   }).join("")).join("");
   const u = session.user;
   const ch = (A.join ? `<a class="side-channel" href="${A.join}" target="_blank" rel="noopener">${icon.telegram}<span><b>Join our Telegram Channel</b><small>Free daily analysis and signals</small></span></a>` : "")
+    + (A.fx ? `<a class="side-channel fx" href="${A.fx}" target="_blank" rel="noopener"><i>💱</i><span><b>Join Our Forex Signals Room</b><small>Forex and gold signals</small></span></a>` : "")
+    + (A.crypto ? `<a class="side-channel cr" href="${A.crypto}" target="_blank" rel="noopener"><i>₿</i><span><b>Join our Crypto Channel</b><small>Bitcoin and altcoin setups</small></span></a>` : "")
+    + (A.robot ? `<a class="side-channel rb" href="${A.robot}" target="_blank" rel="noopener"><i>🤖</i><span><b>Forex/Gold Trading Robot</b><small>Automatic trading, weekly results</small></span></a>` : "")
     + (A.bot ? `<a class="side-channel bot" href="${A.bot}" target="_blank" rel="noopener">${icon.telegram}<span><b>AliceCryptoScanner Bot</b><small>All tools and market news on Telegram</small></span></a>` : "");
   $("#side-foot").innerHTML = ch + (u
     ? `<div class="panel" style="padding:12px"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><b style="font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(u.name || u.email)}</b><span class="plan-badge ${p}">${p[0].toUpperCase() + p.slice(1)}</span></div>${p === "free" ? `<a class="btn btn-gold btn-sm btn-block" style="margin-top:10px" href="#/upgrade">Upgrade</a>` : ""}</div>`
-    : `<div class="panel" style="padding:12px"><b style="font-size:14px">Free account</b><p class="note" style="margin:4px 0 10px">Save alerts, chat and collect coins.</p><a class="btn btn-gold btn-sm btn-block" href="#/signup">Sign up free</a><a class="btn btn-quiet btn-sm btn-block" href="#/login">Log in</a></div>`);
+    : `<div class="panel" style="padding:12px"><b style="font-size:14px">10-day free trial</b><p class="note" style="margin:4px 0 10px">Every free tool for 10 days. No payment needed.</p><a class="btn btn-gold btn-sm btn-block" href="#/signup">Start free trial</a><a class="btn btn-quiet btn-sm btn-block" href="#/login">Log in</a></div>`);
 }
 function setTop({ title = "Alice", sub = "", actions = null, back: showBack = false } = {}) {
   $("#top-title").textContent = title;
@@ -90,12 +93,12 @@ function setTop({ title = "Alice", sub = "", actions = null, back: showBack = fa
   const alertsBtn = `<a class="icon-btn" href="#/alerts" aria-label="Alerts">${icon.bell}${unseenAlerts ? '<span class="dot"></span>' : ""}</a>`;
   const langBtn = `<a class="icon-btn lang-btn" href="#/language" aria-label="Language" title="Language">${icon.globe}<small>${lang.toUpperCase()}</small></a>`;
   const themeBtn = `<button class="icon-btn theme-ic" type="button" data-theme-toggle aria-label="Dark or light mode" title="Dark or light mode">${document.documentElement.getAttribute("data-theme") === "light" ? icon.moon : icon.sun}</button>`;
-  $("#top-actions").innerHTML = actions != null ? String(actions) : (session.user ? coins + themeBtn + langBtn + alertsBtn : themeBtn + langBtn + `<a class="btn btn-gold btn-sm" href="#/signup">Sign up free</a>`);
+  $("#top-actions").innerHTML = actions != null ? String(actions) : (session.user ? coins + themeBtn + langBtn + alertsBtn : themeBtn + langBtn + `<a class="btn btn-gold btn-sm" href="#/signup">Free trial</a>`);
 }
 $("#back-btn").addEventListener("click", () => back());
 
 /* ------------------------------------------------------------------ router */
-let current = null, rendering = 0;
+let current = null, rendering = 0, gateShown = false;
 async function render() {
   const { path, query } = parseHash();
   // keep an in-app history stack for the Back button
@@ -107,6 +110,8 @@ async function render() {
   const { r, params } = m;
   if (r.opts.auth && !session.loggedIn) { go("/login?next=" + encodeURIComponent(location.hash.slice(1))); return; }
   if (current) current.destroy();
+  const gate = gateFor(path);
+  gateShown = !!gate;
   const ticket = ++rendering;
   drawShell(r.opts.tab, path);
   setTop({ title: "Alice", back: !!r.opts.back });
@@ -114,6 +119,8 @@ async function render() {
   document.body.classList.toggle("in-chat", path.startsWith("/chat"));
   const ctx = makeCtx(view, params, query, (o) => setTop({ back: !!r.opts.back, ...o }));
   current = ctx;
+  trialBar(path);
+  if (gate) { view.innerHTML = gate; view.scrollTop = 0; window.scrollTo(0, 0); updateAd(); return; }
   try {
     const mod = await r.loader();
     if (ticket !== rendering) return;
@@ -127,6 +134,56 @@ async function render() {
   }
   updateAd();
 }
+/* ------------------------------------------------------------------ 10-day free trial, then Premium or Elite */
+const OPEN_ROUTES = /^\/(upgrade|pay\/|payments|profile|edit-profile|password|delete|contact|install|notifications|language|login|signup|forgot|rewards|spin|exchanges)/;
+const TRIAL_DAYS = 10;
+function access() {
+  const u = session.user;
+  if (!u) return session.loggedIn ? "loading" : "guest";
+  if (plan() !== "free") return "paid";
+  return u.access || "trial";
+}
+function daysLeft() {
+  const end = Number((session.user || {}).trial_ends_at || 0);
+  return end ? Math.max(0, Math.ceil((end - Date.now()) / 864e5)) : TRIAL_DAYS;
+}
+const PERKS = ["Every market scored 0 to 100 on every timeframe", "Best Trades with entry, stop loss and two targets",
+  "Gold and BTC deep analysis, AI chart analyzer and whale radar", "Alerts, news, calendar and all pro tools"];
+function gateFor(path) {
+  if (OPEN_ROUTES.test(path)) return "";
+  const a = access();
+  const perks = PERKS.map((x) => `<li>${icon.check || "✓"}<span>${esc(x)}</span></li>`).join("");
+  if (a === "guest") return `<div class="paywall"><div class="pw-emo">🎁</div><h1>Start your ${TRIAL_DAYS}-day free trial</h1>
+    <p class="muted">Create a free account to use the scanner, alerts, news, calculators and the academy for ${TRIAL_DAYS} days. No payment needed.</p>
+    <ul class="pw-list">${perks}</ul>
+    <div class="btn-row" style="justify-content:center"><a class="btn btn-gold" href="#/signup">Start free trial</a><a class="btn btn-line" href="#/login">I have an account</a></div>
+    <p class="note">After the trial: Premium 10 USDT a month (70 a year) · Elite 15 USDT a month (90 a year).</p></div>`;
+  if (a === "expired") return `<div class="paywall"><div class="pw-emo">🔒</div><h1>Your free trial has ended</h1>
+    <p class="muted">Choose a plan to unlock Alice again. Your account, watchlist and alerts are kept.</p>
+    <div class="pw-plans">
+      <a class="pw-plan" href="#/upgrade?plan=premium"><b>⭐ Premium</b><span class="pw-price">10 USDT<small>/month</small></span><span class="pw-alt">or 70 USDT a year · save 42%</span><span class="btn btn-blue btn-sm">Get Premium</span></a>
+      <a class="pw-plan best" href="#/upgrade?plan=elite"><em>Best value</em><b>👑 Elite</b><span class="pw-price">15 USDT<small>/month</small></span><span class="pw-alt">or 90 USDT a year · save 50%</span><span class="btn btn-gold btn-sm">Get Elite</span></a>
+    </div>
+    <ul class="pw-list">${perks}</ul>
+    <p class="note">Pay with USDT or Bitcoin on the website, or Google Play in the Android app. Or <a href="#/rewards">earn Premium with coins</a>.</p></div>`;
+  return "";
+}
+function trialBar(path) {
+  let bar = document.getElementById("trial-bar");
+  if (!bar) { bar = document.createElement("div"); bar.id = "trial-bar"; $("#view").before(bar); }
+  const a = access();
+  if (a !== "trial" || /^\/(upgrade|pay\/)/.test(path)) { bar.hidden = true; return; }
+  const d = daysLeft();
+  bar.hidden = false;
+  bar.className = "trial-bar" + (d <= 3 ? " urgent" : "");
+  bar.innerHTML = `<span>🎁 Free trial: <b>${d} ${d === 1 ? "day" : "days"} left</b>. Premium from 10 USDT a month.</span><a class="btn btn-gold btn-sm" href="#/upgrade">Upgrade</a>`;
+}
+on("user", () => {
+  const { path } = parseHash();
+  trialBar(path);
+  if (!!gateFor(path) !== gateShown) render();   // the account loaded after the first paint: show or remove the paywall
+});
+
 window.addEventListener("hashchange", render);
 on("route", render);
 on("auth", () => { toast("Please log in again"); go("/login"); });

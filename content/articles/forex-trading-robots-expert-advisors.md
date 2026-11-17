@@ -2,6 +2,7 @@
 title: Forex Trading Robots (EAs): How to Choose the Best MT4/MT5 Trading Robot
 description: What a forex trading robot (expert advisor) is, how automated forex trading works on MT4 and MT5, how to judge results, avoid scams and run an EA safely on a VPS.
 date: 2026-10-14
+updated: 2026-11-17
 category: forex
 keywords: best mt4 trading robot, best mt5 trading robot, forex trading robot, expert advisor, automated forex trading, forex ea, gold trading robot, auto trading bot
 tools: position-size-calculator, compound-calculator
@@ -64,6 +65,10 @@ Robots are excellent at discipline and speed. Humans are better at reading conte
 ## Our automatic trading robot
 
 We run an automatic trading robot for MT4 and MT5 with its live results shared on Telegram. Join the channel to see how it trades, its results and how to connect it to your own account.
+
+## The Alice trading robots
+
+The Alice team runs three robots, each built for one market: the [forex automatic trading robot / EA](site:trading-robots/forex-ea/) for EUR/USD (backtest: 645 trades, 98.14% winners, profit factor 19.33), the [gold automatic trading robot / EA](site:trading-robots/gold-ea/) for XAU/USD and the [crypto automatic trading robot / EA](site:trading-robots/crypto-trading-bot/) for Bitcoin on MT5. Weekly live results are on the [trading robots page](site:trading-robots/).
 
 [[tg:robot]]
 

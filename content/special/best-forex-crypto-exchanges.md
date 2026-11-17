@@ -43,7 +43,7 @@ IC Markets is known for raw spreads and MetaTrader 4, MetaTrader 5, cTrader and 
 
 ### Do I pay more if I use your link?
 
-No. Partner links never add costs. The platform may pay Alice a commission, which helps keep the free plan free.
+No. Partner links never add costs. The platform may pay Alice a commission, which helps keep Alice affordable.
 
 ### Are these exchanges safe?
 

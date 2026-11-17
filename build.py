@@ -167,6 +167,7 @@ def md_to_html(text: str) -> tuple[str, list[tuple[str, str]]]:
     m = markdown.Markdown(extensions=["tables", "toc", "attr_list", "sane_lists", "md_in_html"],
                           extension_configs={"toc": {"permalink": False, "toc_depth": "2"}})
     text = text.replace("](img:", f"]({BASE}static/img/articles/")
+    text = text.replace("](site:", f"]({BASE}")   # [text](site:learn/x/) → link inside the website
     body = m.convert(text).replace("<table>", '<div class="table-wrap"><table>').replace("</table>", "</table></div>")
     # images → <figure> with caption (from the markdown title), lazy loading and fixed aspect
     def fig(mm: re.Match) -> str:
@@ -341,13 +342,15 @@ def write_page(path: str, *, title: str, description: str, body: str, nav: str =
         "lang": lang, "dir": "rtl" if lang in RTL_LANGS else "ltr", "alternates": alternates, "app": app_url(lang),
         "home": BASE + lang_home(lang), "channel": esc(SITE.get("telegram_channel", "")),
         "join": esc(SITE.get("telegram_join", "")), "bot": esc(SITE.get("telegram_bot", "")),
+        "fx_room": esc(SITE.get("forex_channel", "")), "crypto_ch": esc(SITE.get("crypto_channel", "")),
+        "robot_ch": esc(SITE.get("robot_channel", "")), "robot_buy": esc(SITE.get("robot_admin", "")),
         "lang_font": (f'<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family={LANG_FONTS[lang]}&display=swap">'
                       if lang in LANG_FONTS else ""),
         "lang_menu": "".join(f'<a href="{BASE}{lang_home(c)}" hreflang="{c}" lang="{c}"{" aria-current=\"true\"" if c == lang else ""}>{n}</a>'
                              for c, n in SITE_LANGS),
         "lang_code": lang.upper(),
     }
-    for key in ("scanner", "tools", "learn", "news", "pricing", "download"):
+    for key in ("scanner", "tools", "learn", "news", "robots", "pricing", "download"):
         ctx[f"nav_{key}"] = ' aria-current="page"' if nav == key else ""
     html_out = seo_fit(localize(render(read(TPL / "base.html"), ctx), lang), path)
     dest = OUT / path / "index.html" if not path.endswith(".html") else OUT / path
@@ -416,12 +419,12 @@ def seo_fit(doc: str, path: str) -> str:
 
 # --------------------------------------------------------------------------- shared blocks
 DEFAULT_PLANS = [
-    {"id": "premium", "label": "Premium", "monthly": 19.99, "yearly": 149.99, "features": [
+    {"id": "premium", "label": "Premium", "monthly": 10, "yearly": 70, "features": [
         "No pop-up or video ads", "Top 50% of crypto pairs plus every forex pair, gold, oil, indices and US stocks",
         "Every timeframe from 1 minute to 1 month", "Multi-timeframe matrix", "Funding and open interest tracker",
         "Unlimited market analysis", "AI chart analyzer, 15 a day", "AI economic-calendar impact",
         "Full trading academy including the Pro module", "40 alerts including breakout, volume and trend"]},
-    {"id": "elite", "label": "Elite", "monthly": 39.99, "yearly": 299.99, "features": [
+    {"id": "elite", "label": "Elite", "monthly": 15, "yearly": 90, "features": [
         "Everything in Premium", "Every crypto pair in the scanner", "Gold and BTC deep analysis with trade plans",
         "Whale and unusual activity radar with alerts", "Best Trades: the top setups in every market",
         "Unlimited alerts", "AI chart analyzer, 50 a day", "Priority support"]},
@@ -435,9 +438,9 @@ def plans_html(app: str = "") -> str:
     app = app or f"{BASE}app/"
     def li(items):
         return "".join(f"<li>{ICONS['check']}<span>[[{esc(x)}]]</span></li>" for x in items)
-    cards = [f'''<div class="plan"><span class="plan-ic">🌱</span><h3>[[Free]]</h3><p class="muted" style="margin:0">[[For trying Alice and learning the market]]</p>
-  <div class="price">$0</div><div class="alt">[[Free forever]]</div><ul>{li(FREE_FEATURES)}</ul>
-  <a class="btn btn-line" href="{app}#/signup">[[Create a free account]]</a></div>''']
+    cards = [f'''<div class="plan"><span class="plan-ic">🌱</span><h3>[[Free trial]]</h3><p class="muted" style="margin:0">[[Try every free tool before you choose a plan]]</p>
+  <div class="price">$0</div><div class="alt">[[10 days, then Premium or Elite]]</div><ul>{li(FREE_FEATURES)}</ul>
+  <a class="btn btn-line" href="{app}#/signup">[[Start your 10-day free trial]]</a></div>''']
     for p in DEFAULT_PLANS:
         feat = p["id"] == "elite"
         save = round(100 - p["yearly"] / (p["monthly"] * 12) * 100)
@@ -484,7 +487,7 @@ def downloads_html() -> str:
 
 
 HOME_FAQ = [
-    ("Is Alice Forex/Crypto Scanner free?", "Yes. The free plan includes the scanner on the 1H, 4H and 1D timeframes, the top crypto pairs and major forex pairs, alerts, the discussion rooms and every free tool on this website. Premium and Elite unlock every market, every timeframe and the pro tools."),
+    ("Is Alice Forex/Crypto Scanner free?", "Every new account gets a 10-day free trial with the scanner on the 1H, 4H and 1D timeframes, alerts, news and the tools. After the trial, Premium costs 10 USDT a month (70 a year) and Elite 15 USDT a month (90 a year). The guides, news and calculators on this website stay free for everyone."),
     ("Can I use Alice on iPhone?", "Yes. Open the web app in Safari, tap Share and choose Add to Home Screen. Alice then opens full screen from its own icon, like a normal app. A native App Store version is on the way."),
     ("Is my website account the same as my app account?", "Yes. Log in with the same email and password on the website, the Android app and iPhone. Your plan, alerts, coins and settings follow you."),
     ("How do I pay on the website?", "On the website you pay with USDT (TRC20 or BEP20) or Bitcoin. Send the exact amount shown, paste the transaction ID and add a screenshot. Our team checks the payment and activates your plan, usually within a few hours."),
@@ -823,13 +826,15 @@ def build_home(arts: list[dict], lang: str) -> None:
         "free_tools": free_tools_html(app), "pro_tools": pro_tools_html(app), "compare": compare_html(), "lessons": lessons_html(app),
         "channel": esc(SITE.get("telegram_channel", "")), "tg": esc(SITE.get("telegram_support", "")),
         "join": esc(SITE.get("telegram_join", "")), "bot": esc(SITE.get("telegram_bot", "")),
+        "fx_room": esc(SITE.get("forex_channel", "")), "crypto_ch": esc(SITE.get("crypto_channel", "")),
+        "robot_ch": esc(SITE.get("robot_channel", "")), "robot_buy": esc(SITE.get("robot_admin", "")),
     })
     app_ld = {"@type": "SoftwareApplication", "name": "Alice Forex/Crypto Scanner", "operatingSystem": "Android, iOS, Web",
               "applicationCategory": "FinanceApplication", "url": url(), "image": url("static/img/icons/icon-512.png"),
               "description": SITE["description"], "inLanguage": [c for c, _ in SITE_LANGS],
-              "offers": [{"@type": "Offer", "price": "0", "priceCurrency": "USD", "name": "Free"},
-                         {"@type": "Offer", "price": "19.99", "priceCurrency": "USD", "name": "Premium monthly"},
-                         {"@type": "Offer", "price": "39.99", "priceCurrency": "USD", "name": "Elite monthly"}]}
+              "offers": [{"@type": "Offer", "price": "0", "priceCurrency": "USD", "name": "10-day free trial"},
+                         {"@type": "Offer", "price": "10", "priceCurrency": "USD", "name": "Premium monthly"},
+                         {"@type": "Offer", "price": "15", "priceCurrency": "USD", "name": "Elite monthly"}]}
     website = {"@type": "WebSite", "@id": url("#site"), "name": "Alice Forex/Crypto Scanner", "url": url(), "publisher": {"@id": url("#org")}}
     faq_items = [(localize(f"[[{q}]]", lang), localize(f"[[{a}]]", lang)) for q, a in HOME_FAQ]
     alternates = "\n".join(f'<link rel="alternate" hreflang="{c}" href="{url(lang_home(c))}">' for c, _ in SITE_LANGS) + \
@@ -852,20 +857,21 @@ def build_special(arts: list[dict]) -> None:
     pricing_faq = [
         ("Which payment methods can I use?", "On the website: USDT on TRC20 (TRON) or BEP20 (BNB Smart Chain), or Bitcoin. In the Android app from Google Play you can also pay with Google Play billing."),
         ("How fast is my plan activated?", "After you submit the transaction ID and screenshot, our team checks the payment on the blockchain and activates your plan, usually within a few hours. You get a notification in the app when it is active."),
+        ("What happens after the 10-day free trial?", "The scanner and the app's tools need Premium or Elite after the trial. Your account, watchlist and alerts are kept, and the guides, news and calculators on this website stay free. Premium costs 10 USDT a month or 70 a year, Elite 15 USDT a month or 90 a year."),
         ("Do I need a separate plan for the app and the website?", "No. One plan works everywhere: website, Android and iPhone. Just log in with the same email."),
         ("Can I earn Premium for free?", "Yes. Spin the wheel and invite friends to collect coins. 5,000 coins convert into one month of Premium and 10,000 coins into one month of Elite."),
-        ("Can I get a refund?", "Crypto payments cannot be reversed on the blockchain, so please start with the free plan and the 7-day Gold and BTC analysis trial before you upgrade. If something goes wrong with your plan, contact support on Telegram and we will help."),
+        ("Can I get a refund?", "Crypto payments cannot be reversed on the blockchain, so please use your 10-day free trial before you upgrade. If something goes wrong with your plan, contact support on Telegram and we will help."),
     ]
     body = f'''<div class="wrap"><header class="page-head">{crumbs_html(crumbs)}<h1>Plans and pricing</h1>
-<p class="lead">Start free. Upgrade to Premium or Elite when you want every market, every timeframe and the pro tools. One plan covers the website, Android and iPhone.</p></header>
+<p class="lead">Every new account gets a 10-day free trial. Then choose Premium from 10 USDT a month or Elite from 15 USDT a month. Save up to 50% with a yearly plan. One plan covers the website, Android and iPhone.</p></header>
 {plans_html()}
 <h2 style="margin-top:48px">Compare every feature</h2>
 {compare_html()}
 <section class="section" style="padding-top:56px"><h2>Pricing questions</h2>{faq_html(pricing_faq)}</section></div>'''
     product = {"@type": "Product", "name": "Alice Forex/Crypto Scanner Premium and Elite", "brand": {"@type": "Brand", "name": "Alice Forex/Crypto Scanner"},
                "offers": [{"@type": "Offer", "price": f"{p['monthly']:.2f}", "priceCurrency": "USD", "name": f"{p['label']} monthly", "url": url("pricing/")} for p in DEFAULT_PLANS]}
-    write_page("pricing/", title="Pricing: Free, Premium and Elite plans | Alice Forex/Crypto Scanner",
-               description="Compare the free, Premium and Elite plans of the Alice crypto and forex scanner. Pay with USDT or Bitcoin. One plan works on the website, Android and iPhone.",
+    write_page("pricing/", title="Pricing: 10-Day Free Trial, Premium & Elite | Alice Scanner",
+               description="10-day free trial, then Premium for 10 USDT a month (70 a year) or Elite for 15 USDT a month (90 a year). Pay with USDT or Bitcoin. One plan for web, Android and iPhone.",
                body=body, nav="pricing", jsonld=ld(ORG, product, crumbs_ld(crumbs), faq_ld(pricing_faq)),
                extra_js=f'<script src="{BASE}assets/js/board.js?v={VERSION}" defer></script>', sitemap=("0.8", ""))
 
@@ -1011,8 +1017,10 @@ def build_news() -> None:
 
 def tg_side() -> str:
     """Telegram buttons in the article sidebar."""
-    items = [("telegram_join", "Join our Telegram Channel", "tg-s-join"), ("forex_channel", "Forex & gold channel", "tg-s-fx"),
-             ("robot_channel", "Automatic Trading Robot", "tg-s-robot"), ("vip_support", "VIP trades on Telegram", "tg-s-vip"),
+    items = [("telegram_join", "Join our Telegram Channel", "tg-s-join"), ("forex_channel", "Join Our Forex Signals Room", "tg-s-fx"),
+             ("crypto_channel", "Join our Crypto Channel", "tg-s-join"),
+             ("robot_channel", "Forex/Gold Trading Robot", "tg-s-robot"), ("robot_admin", "Buy the trading robot", "tg-s-vip"),
+             ("vip_support", "VIP trades on Telegram", "tg-s-vip"),
              ("telegram_bot", "AliceCryptoScanner Bot", "tg-s-bot")]
     links = "".join(f'<a class="tg-s {c}" href="{esc(SITE.get(k, ""))}" target="_blank" rel="noopener">{ICONS["tgfill"]}<span>{esc(t)}</span></a>'
                     for k, t, c in items if SITE.get(k))
@@ -1024,8 +1032,10 @@ def tg_cta(kind: str) -> str:
     TG = ICONS["tgfill"]
     data = {
         "join": ("", SITE.get("telegram_join", ""), "Join our Telegram Channel", "Free daily analysis, key levels and market updates from the Alice team.", "Join now"),
-        "forex": ("", SITE.get("forex_channel", ""), "Join our Forex Telegram channel", "Daily forex and gold (XAU/USD) setups with entry, stop loss and targets, plus market news.", "Join the forex channel"),
-        "robot": ("robot", SITE.get("robot_channel", ""), "Automatic Trading Robot (MT4/MT5 EA)", "See our automatic trading robot, its live results and how to run it on your own account.", "See the trading robot"),
+        "forex": ("", SITE.get("forex_channel", ""), "Join Our Forex Signals Room", "Daily forex and gold (XAU/USD) signals with entry, stop loss and targets, plus market news.", "Join the signals room"),
+        "crypto": ("", SITE.get("crypto_channel", ""), "Join our Crypto Channel", "Bitcoin and altcoin setups, whale moves and crypto market updates every day.", "Join the crypto channel"),
+        "robot": ("robot", SITE.get("robot_channel", ""), "Automatic Forex/Gold Trading Robot (MT4/MT5 EA)", "See our automatic trading robots, their weekly live results and how to run them on your own account.", "See the trading robot"),
+        "buy": ("robot", SITE.get("robot_admin", ""), "Buy the Alice trading robot", "Message our team on Telegram for the price, setup help and a VPS guide.", "Buy on Telegram"),
         "vip": ("vip", SITE.get("vip_support", ""), "Want VIP trades on Telegram?", "Get entries and exits on Telegram and join the VIP discussion room. Message our support team to join.", "Join VIP on Telegram"),
         "bot": ("", SITE.get("telegram_bot", ""), "AliceCryptoScanner Bot", "Every Alice tool in one Telegram menu, plus high-impact market news as it happens.", "Open the bot"),
     }
@@ -1179,6 +1189,162 @@ def build_strength_and_exchanges() -> None:
                extra_js=f'<script src="{BASE}assets/js/strength.js?v={VERSION}" defer></script>', sitemap=("0.9", ""))
 
 
+# --------------------------------------------------------------------------- trading robots (EA) pages
+FOREX_BACKTEST = {  # MT4 Strategy Tester report of the Alice forex EA (screenshots in static/img/robots/)
+    "settings": [("Market", "EUR/USD"), ("Platform", "MetaTrader 4 Strategy Tester"), ("Timeframe and model", "M1, every tick"),
+                 ("Bars / ticks tested", "746,987 bars · 66,531,564 ticks"), ("Initial deposit", "10,000.00"), ("Spread", "2 points")],
+    "results": [("Total net profit", "249,091.95 (+2,491%)"), ("Final balance", "259,091.95"), ("Gross profit", "262,678.13"),
+                ("Profit factor", "19.33"), ("Expected payoff per trade", "386.19"), ("Total trades", "645"),
+                ("Winning trades", "633 (98.14%)"), ("Buy trades won", "313 (98.72%)"), ("Sell trades won", "332 (97.59%)"),
+                ("Largest winning trade", "7,235.44"), ("Max consecutive wins", "187 (89,596.57)"), ("Average consecutive wins", "58")],
+    "risk": [("Gross loss", "-13,586.17"), ("Losing trades", "12 (1.86%)"), ("Maximal drawdown", "21,044.80 (16.47%)"),
+             ("Relative drawdown", "29.56% (5,093.89)"), ("Absolute drawdown", "260.73"), ("Average winning / losing trade", "414.97 / -1,132.18"),
+             ("Max consecutive losses", "3 (-4,018.37)"), ("Average consecutive losses", "1")],
+}
+ROBOTS = [  # slug, name, market, emoji, card text
+    ("forex-ea", "Forex Automatic Trading Robot / EA", "forex", "💱", "EUR/USD expert advisor for MT4 and MT5. Backtest: 98.14% winning trades and a profit factor of 19.33."),
+    ("gold-ea", "Gold Automatic Trading Robot / EA", "gold", "🥇", "Built only for XAU/USD, with a stop loss on every trade and focus on the London and New York sessions."),
+    ("crypto-trading-bot", "Crypto Automatic Trading Robot / EA", "crypto", "₿", "Bitcoin and crypto CFDs on MetaTrader 5, trading 24/7 including weekends."),
+]
+
+
+def robot_results_snapshot(market: str = "", limit: int = 12) -> list[dict]:
+    """Newest robot screenshots from the server at build time (the page also refreshes them live in the browser).
+    Baked into the HTML so search engines see this week's results. Empty if the server can't be reached."""
+    if not API or os.environ.get("ALICE_OFFLINE"):
+        return []
+    import urllib.request
+    try:
+        q = f"?limit={limit}" + (f"&market={market}" if market else "")
+        with urllib.request.urlopen(API + "/api/robot/results" + q, timeout=6) as r:
+            return (json.loads(r.read().decode("utf-8")) or {}).get("items", [])[:limit]
+    except Exception as e:  # noqa: BLE001
+        print(f"  robot results not loaded ({e.__class__.__name__}); the page loads them live")
+        return []
+
+
+def _day(ms) -> str:
+    return dt.datetime.fromtimestamp(int(ms) / 1000, dt.timezone.utc).date().isoformat()
+
+
+def robot_gallery(market: str, items: list[dict], review: bool = False) -> str:
+    cards = "".join(
+        f'<a class="rb-shot" href="{esc(i["url"])}" target="_blank" rel="noopener"><img src="{esc(i["url"])}" '
+        f'alt="{esc(i.get("caption") or ("Trader feedback" if review else "Robot trade result"))}" loading="lazy" decoding="async">'
+        f'<span>{esc((i.get("caption") or "")[:120])}<time datetime="{_day(i["created_at"])}">{nice_date(_day(i["created_at"]))}</time></span></a>'
+        for i in items)
+    empty = "" if items else (
+        f'<p class="rb-empty">{"Feedback from our clients appears here." if review else "The newest trade screenshots from our Telegram channel appear here every week."} '
+        f'<a href="{esc(SITE.get("robot_channel", ""))}" target="_blank" rel="noopener">See them on Telegram now</a>.</p>')
+    return f'<div class="rb-gallery" data-market="{market}" data-limit="{12 if review else 24}">{cards}{empty}</div>'
+
+
+def robot_buttons(big: bool = True) -> str:
+    ch, buy = esc(SITE.get("robot_channel", "")), esc(SITE.get("robot_admin", ""))
+    handle = ch.split("t.me/")[-1] if ch else ""
+    return (f'<div class="rb-actions{" big" if big else ""}">'
+            + (f'<a class="rb-tg" href="{ch}" target="_blank" rel="noopener"><span class="tg-ic">{ICONS["tgfill"]}</span>'
+               f'<span><b>Join our Trading Robot channel</b><small>Live results every week · @{handle}</small></span></a>' if ch else "")
+            + (f'<a class="rb-buy" href="{buy}" target="_blank" rel="noopener"><span class="rb-buy-ic">🛒</span>'
+               f'<span><b>Buy this robot</b><small>Chat with our team on Telegram</small></span></a>' if buy else "")
+            + "</div>")
+
+
+def build_robots(arts: list[dict]) -> None:
+    hub_crumbs = [("Home", ""), ("Trading robots", "trading-robots/")]
+    robot_arts = [a for a in arts if re.search(r"\b(ea|robots?|bot|vps)\b", a["slug"].replace("-", " "))]
+    guides = "".join(post_card(a) for a in robot_arts[:6])
+    reviews = robot_results_snapshot("review", 12)
+
+    def shell(slug: str, meta: dict, body_md: str, faq: list, top: str, market: str) -> None:
+        body_html, _ = md_to_html(body_md)
+        crumbs = hub_crumbs + ([(meta["h1"], f"trading-robots/{slug}/")] if slug else [])
+        others = "".join(
+            f'<a class="tool-link" href="{BASE}trading-robots/{s}/"><span class="ic" aria-hidden="true">{e}</span><span><b>{esc(n)}</b><span>{esc(t)}</span></span></a>'
+            for s, n, _m, e, t in ROBOTS if s != slug)
+        live = robot_results_snapshot(market, 12)
+        live_title = "This week's live results" if slug else "Latest live results from all robots"
+        buy = esc(SITE.get("robot_admin", ""))
+        page = f'''<div class="wrap robot-page">
+  <header class="page-head rb-hero">{crumbs_html(crumbs)}<span class="tag gold">MT4 · MT5 expert advisor</span>
+    <h1>{esc(meta["h1"])}</h1><p class="lead">{esc(meta["intro"])}</p>{robot_buttons()}</header>
+  {top}
+  <section class="rb-live" aria-labelledby="live-h"><div class="rb-sec-head"><h2 id="live-h">{live_title}</h2>
+    <span class="tag sky">Added automatically from our Telegram channel</span></div>{robot_gallery(market, live)}</section>
+  <section class="rb-live rb-reviews" aria-labelledby="rev-h"{"" if reviews else " hidden"}><div class="rb-sec-head"><h2 id="rev-h">What traders say</h2>
+    <span class="tag">Real messages from our clients</span></div>{robot_gallery("review", reviews, True)}</section>
+  {ad("slot-top")}
+  <div class="layout">
+    <article><div class="prose">{shortcodes(body_html)}</div>
+      {robot_buttons(False)}
+      <h2 style="margin-top:48px">Frequently asked questions</h2>{faq_html(faq)}
+      {f'<section class="related"><h2>Trading robot guides</h2><div class="post-list">{guides}</div></section>' if guides else ""}
+      <p class="disclaimer">Backtests and past results do not guarantee future results. Trading forex, gold and crypto with leverage carries a high risk of losing money. Only trade with money you can afford to lose. Results depend on your broker, spread, lot size and VPS.</p>
+    </article>
+    <aside><div class="side-card rb-side"><b>🤖 Get the robot</b><p>Price, files and personal setup help from our team on Telegram.</p>
+        <a class="btn btn-gold btn-sm btn-block rb-pulse" href="{buy}" target="_blank" rel="noopener">Buy this robot</a></div>
+      <div class="side-card"><b>{"Our robots" if not slug else "Other robots"}</b><div class="tool-list">{others}</div></div>
+      {tg_cta("forex")}{ad("slot-sidebar", "ad-side")}</aside>
+  </div>
+</div>'''
+        path = f"trading-robots/{slug}/" if slug else "trading-robots/"
+        img = "static/img/robots/forex-ea-backtest-equity-curve.webp"
+        if slug:
+            main_ld = {"@type": "SoftwareApplication", "name": meta["h1"], "url": url(path), "applicationCategory": "FinanceApplication",
+                       "operatingSystem": "Windows (MetaTrader 4, MetaTrader 5)", "description": meta["description"],
+                       "publisher": {"@id": url("#org")}, "keywords": meta.get("keywords", "")}
+            if market == "forex":
+                main_ld["image"] = url(img)
+        else:
+            main_ld = {"@type": "ItemList", "name": meta["h1"], "itemListElement": [
+                {"@type": "ListItem", "position": i + 1, "name": r[1], "url": url(f"trading-robots/{r[0]}/")} for i, r in enumerate(ROBOTS)]}
+        write_page(path, title=meta["title"], description=meta["description"], body=page, nav="robots",
+                   jsonld=ld(ORG, main_ld, crumbs_ld(crumbs), faq_ld(faq)),
+                   og_image=img if market in ("forex", "") else "",
+                   extra_js=f'<script src="{BASE}assets/js/robots.js?v={VERSION}" defer></script>', sitemap=("0.9", TODAY.isoformat()))
+
+    # hub
+    meta, text = front_matter(read(CONTENT / "robots" / "index.md"))
+    main_md, faq = split_faq(text)
+    cards = "".join(
+        f'<a class="rb-card rb-{m}" href="{BASE}trading-robots/{s}/"><span class="rb-emo">{e}</span><h2>{esc(n)}</h2><p>{esc(t)}</p>'
+        f'<span class="btn btn-gold btn-sm">See the robot</span></a>' for s, n, m, e, t in ROBOTS)
+    hl = ('<div class="rb-stats"><div><b>98.14%</b><span>winning trades</span></div><div><b>19.33</b><span>profit factor</span></div>'
+          '<div><b>+2,491%</b><span>net profit in the backtest</span></div><div><b>645</b><span>trades tested tick by tick</span></div></div>'
+          f'<p class="note rb-note">Forex EA, EUR/USD M1 backtest in MetaTrader 4 with every-tick modelling. <a href="{BASE}trading-robots/forex-ea/#bt-h">See the full report and risk figures</a>.</p>')
+    shell("", meta, main_md, faq, f'<div class="rb-cards">{cards}</div>{hl}', "")
+
+    # forex robot with the backtest report
+    meta, text = front_matter(read(CONTENT / "robots" / "forex-ea.md"))
+    main_md, faq = split_faq(text)
+
+    def rows(items):
+        return "".join(f'<tr><th scope="row">{esc(k)}</th><td>{esc(v)}</td></tr>' for k, v in items)
+    bt = f'''<section class="rb-backtest" aria-labelledby="bt-h"><div class="rb-sec-head"><h2 id="bt-h">Backtest results: EUR/USD, every tick</h2><span class="tag gold">MT4 Strategy Tester</span></div>
+  <div class="rb-stats"><div><b>98.14%</b><span>winning trades (633 of 645)</span></div><div><b>19.33</b><span>profit factor</span></div>
+    <div><b>+249,092</b><span>net profit from a 10,000 deposit</span></div><div><b>3</b><span>most losses in a row</span></div></div>
+  <div class="rb-figs">
+    <figure class="fig"><img src="{BASE}static/img/robots/forex-ea-backtest-equity-curve.webp" width="1280" height="884" alt="Forex EA backtest equity curve on EUR/USD: balance rising from 10,000 to over 259,000" loading="lazy" decoding="async"><figcaption>Balance and equity curve: a steady rise from 10,000 to 259,092 over 645 trades.</figcaption></figure>
+    <figure class="fig"><img src="{BASE}static/img/robots/forex-ea-backtest-report.webp" width="1280" height="856" alt="MT4 Strategy Tester report of the Alice forex EA: profit factor 19.33, 645 trades, 98.14% profit trades" loading="lazy" decoding="async"><figcaption>The full MetaTrader 4 Strategy Tester report.</figcaption></figure>
+  </div>
+  <div class="rb-tables">
+    <div class="table-wrap"><table class="rb-table"><caption>✅ Results</caption><tbody>{rows(FOREX_BACKTEST["results"])}</tbody></table></div>
+    <div><div class="table-wrap"><table class="rb-table"><caption>⚙️ Test settings</caption><tbody>{rows(FOREX_BACKTEST["settings"])}</tbody></table></div>
+      <div class="table-wrap"><table class="rb-table risk"><caption>🛡️ Risk figures</caption><tbody>{rows(FOREX_BACKTEST["risk"])}</tbody></table></div></div>
+  </div>
+  <p class="note">Backtest on historical data with lot sizes that grow with the balance. Live results differ with broker, spread and slippage, which is why we publish live results every week.</p>
+</section>'''
+    shell("forex-ea", meta, main_md, faq, bt, "forex")
+
+    for slug, market in (("gold-ea", "gold"), ("crypto-trading-bot", "crypto")):
+        meta, text = front_matter(read(CONTENT / "robots" / f"{slug}.md"))
+        main_md, faq = split_faq(text)
+        tiles = (f'<div class="rb-stats"><div><b>24/{"7" if market == "crypto" else "5"}</b><span>trades for you around the clock</span></div>'
+                 '<div><b>SL + TP</b><span>on every trade, automatically</span></div>'
+                 f'<div><b>{"MT5" if market == "crypto" else "MT4 · MT5"}</b><span>any broker that allows EAs</span></div>'
+                 '<div><b>Weekly</b><span>live results on Telegram</span></div></div>')
+        shell(slug, meta, main_md, faq, tiles, market)
+
 BOT_TOOLS = [  # short labels for the public Telegram bot (two buttons per row)
     ("📡 Market Scanner", "app:#/scanner"), ("🏆 Best Trades", "app:#/best"),
     ("🥇 Gold & BTC Analysis", "app:#/gold"), ("🐋 Whale Radar", "app:#/activity"),
@@ -1190,6 +1356,7 @@ BOT_TOOLS = [  # short labels for the public Telegram bot (two buttons per row)
     ("🎓 Trading Academy", "app:#/academy"), ("💬 Discussion Rooms", "app:#/chat/crypto"),
     ("🎡 Spin & Earn", "app:#/spin"), ("🏦 Best Exchanges", "site:best-forex-crypto-exchanges/"),
     ("🧰 Free Calculators", "site:tools/"), ("📚 Trading Guides", "site:learn/"),
+    ("🤖 Trading Robots (EA)", "site:trading-robots/"), ("💱 Forex Robot Results", "site:trading-robots/forex-ea/"),
 ]
 
 
@@ -1220,6 +1387,8 @@ def build_app() -> None:
                        "slot_interstitial": json.dumps(read(ROOT / "ads" / "slot-interstitial.html").strip()).replace("</", "<\\/"),
                        "channel": esc(SITE.get("telegram_channel", "")),
                        "join": esc(SITE.get("telegram_join", "")), "bot": esc(SITE.get("telegram_bot", "")),
+                       "fx_room": esc(SITE.get("forex_channel", "")), "crypto_ch": esc(SITE.get("crypto_channel", "")),
+                       "robot_ch": esc(SITE.get("robot_channel", "")), "robot_buy": esc(SITE.get("robot_admin", "")),
                        "analytics": ""})
     (OUT / "app").mkdir(parents=True, exist_ok=True)
     (OUT / "app" / "index.html").write_text(out, encoding="utf-8")
@@ -1301,11 +1470,18 @@ def build_ai_files(arts: list[dict]) -> None:
              "It scores every market from 0 to 100 on every timeframe, lists Best Trades with entry, stop loss and targets, "
              "and includes Gold and BTC deep analysis, an AI chart analyzer, a whale radar, price alerts, a currency strength meter, "
              "forex and crypto peak hours, an economic calendar, live market news, 20 free trading calculators and a 48-lesson academy. "
-             "It works on the web, Android and iPhone with one account, in 10 languages. Plans: Free, Premium and Elite.", "",
+             "It works on the web, Android and iPhone with one account, in 10 languages. New accounts get a 10-day free trial; then Premium "
+             "costs 10 USDT a month (70 a year) and Elite 15 USDT a month (90 a year). The guides, news and calculators on the website stay free. "
+             "The Alice team also offers automatic trading robots (expert advisors) for MT4 and MT5: a forex EA (EUR/USD backtest: 645 trades, "
+             "98.14% winning trades, profit factor 19.33, max drawdown 16.47%), a gold (XAUUSD) EA and a crypto EA, with live results posted weekly.", "",
              "## Main pages",
              f"- [Home]({url('')}): what Alice does, plans and download",
              f"- [Web app]({url('app/')}): the scanner in the browser, free sign-up",
-             f"- [Pricing]({url('pricing/')}): Free, Premium and Elite compared",
+             f"- [Pricing]({url('pricing/')}): 10-day free trial, Premium (10 USDT/month) and Elite (15 USDT/month) compared",
+             f"- [Automatic trading robots (EA)]({url('trading-robots/')}): forex, gold and crypto robots for MT4 and MT5 with weekly live results",
+             f"- [Forex automatic trading robot / EA]({url('trading-robots/forex-ea/')}): EUR/USD EA with the full MT4 backtest report",
+             f"- [Gold automatic trading robot / EA]({url('trading-robots/gold-ea/')}): XAU/USD expert advisor for MT4 and MT5",
+             f"- [Crypto automatic trading robot / EA]({url('trading-robots/crypto-trading-bot/')}): Bitcoin and crypto CFD robot for MT5",
              f"- [Download]({url('download/')}): Android APK, Google Play and iPhone",
              f"- [Currency strength meter]({url('currency-strength-meter/')}): live USD, EUR, GBP, JPY, AUD, NZD, CAD, CHF strength, forex and crypto peak hours",
              f"- [Best exchanges and brokers]({url('best-forex-crypto-exchanges/')}): Bitunix, BingX, IC Markets and Exness compared",
@@ -1368,6 +1544,7 @@ def main() -> None:
     build_pages()
     build_news()
     build_strength_and_exchanges()
+    build_robots(arts)
     build_bot_menu()
     build_app()
     build_meta()

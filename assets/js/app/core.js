@@ -106,6 +106,7 @@ export async function api(path, { method = "GET", body, form, auth = true, timeo
     const msg = (data && data.error) || "Something went wrong (" + res.status + ")";
     const code = (data && data.code) || "http";
     if (res.status === 401 && token && (code === "auth_expired" || code === "auth_required")) { session.clear(); emit("auth"); }
+    if (code === "trial_ended" && session.user && session.user.access !== "expired") { session.user.access = "expired"; setTimeout(() => emit("route"), 0); }
     const extra = {}; if (data) for (const k in data) if (k !== "error" && k !== "code") extra[k] = data[k];
     throw new ApiError(res.status, msg, code, extra);
   }

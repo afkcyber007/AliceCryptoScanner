@@ -58,7 +58,7 @@ Many traders do best by mastering one market first, then adding the other. The s
 
 ## One app for both
 
-The Alice scanner covers crypto, forex, gold, oil, indices and US stocks with the same 0 to 100 score, so you can compare opportunities across markets and see which ones are trending right now. You can start with the free plan on the web, Android or iPhone.
+The Alice scanner covers crypto, forex, gold, oil, indices and US stocks with the same 0 to 100 score, so you can compare opportunities across markets and see which ones are trending right now. You can start with a 10-day free trial on the web, Android or iPhone.
 
 [[app]]
 

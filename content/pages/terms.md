@@ -17,7 +17,7 @@ You must be 18 or older. Keep your password private; you are responsible for act
 
 ## Plans and payments
 
-Premium and Elite plans are sold for a monthly or yearly period. On the website, payment is made in cryptocurrency (USDT on TRC20 or BEP20, or BTC). Send the exact amount on the correct network; funds sent on the wrong network or to a wrong address cannot be recovered. Plans are activated after our team verifies the transaction. Because blockchain payments cannot be reversed, please try the free plan first. If there is a problem with your plan, contact support and we will work with you to fix it. Purchases made through Google Play follow Google Play's terms and refund policy.
+Premium and Elite plans are sold for a monthly or yearly period. On the website, payment is made in cryptocurrency (USDT on TRC20 or BEP20, or BTC). Send the exact amount on the correct network; funds sent on the wrong network or to a wrong address cannot be recovered. Plans are activated after our team verifies the transaction. New accounts get a 10-day free trial; after it, the app's features need a Premium or Elite plan, while the website's guides, news and calculators stay free. Because blockchain payments cannot be reversed, please use the free trial first. If there is a problem with your plan, contact support and we will work with you to fix it. Purchases made through Google Play follow Google Play's terms and refund policy.
 
 ## Coins and rewards
 

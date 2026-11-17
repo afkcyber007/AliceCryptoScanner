@@ -62,7 +62,7 @@ Alice is a **trading scanner app** built around exactly this workflow:
 - The **whale radar** shows large orders, pumps, dumps and money flow.
 - **Alerts** watch the market for you around the clock.
 
-The free plan includes the scanner on the 1H, 4H and daily timeframes and one AI analysis a day.
+Every new account gets a 10-day free trial with the scanner on the 1H, 4H and daily timeframes and one AI analysis a day. After that, Premium is 10 USDT a month and Elite 15 USDT.
 
 [[tg:bot]]
 

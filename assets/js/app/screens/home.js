@@ -19,7 +19,7 @@ export default async function home(ctx) {
     const s = (ov && ov.sentiment) || (brief && brief.sentiment) || null;
     ctx.render(html`
       <div class="greet"><div><h2>${hello}, ${first}</h2><p>${ov ? "Markets updated " + ago(ov.updated_at) : "Loading the markets…"}</p></div>
-        <span class="btn-row" style="gap:8px;margin:0;flex-wrap:nowrap"><a class="lang-chip" href="#/language" aria-label="Language">${icon.globe}${lang.toUpperCase()}</a>${u ? "" : html`<a class="btn btn-gold btn-sm" href="#/signup">Sign up free</a>`}</span></div>
+        <span class="btn-row" style="gap:8px;margin:0;flex-wrap:nowrap"><a class="lang-chip" href="#/language" aria-label="Language">${icon.globe}${lang.toUpperCase()}</a>${u ? "" : html`<a class="btn btn-gold btn-sm" href="#/signup">Free trial</a>`}</span></div>
 
       ${notes.length ? html`<div class="panel" style="border-color:rgba(59,167,255,.4)">${notes.slice(0, 1).map((n) => html`<b>${n.title}</b><p class="muted mt0" style="margin:4px 0 0">${n.body}</p>`)}</div>` : ""}
 

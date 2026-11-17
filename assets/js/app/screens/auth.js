@@ -58,7 +58,7 @@ export async function login(ctx) {
 }
 
 export async function signup(ctx) {
-  ctx.top({ title: "Create account", sub: "Free plan included" });
+  ctx.top({ title: "Create account", sub: "10-day free trial, no payment needed" });
   if (session.loggedIn) { go("/home"); return; }
   if (ctx.query.ref) store.set("ref", String(ctx.query.ref).toUpperCase().slice(0, 12));
   const ref = store.get("ref", "");
