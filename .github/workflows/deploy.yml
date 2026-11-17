@@ -1,13 +1,13 @@
 name: Publish website
 
 # Runs on every change. If you uploaded AliceWebsite.zip (or "AliceWebsite (1).zip"), it is unpacked first.
-# Also runs on the 1st of every month, so dates, the year in titles and the sitemap stay fresh.
+# Also runs every Monday, so the weekly robot results, dates and the sitemap stay fresh.
 # After every publish, Bing / Yandex (IndexNow) are told which pages exist.
 on:
   push:
     branches: [ main ]
   schedule:
-    - cron: "17 3 1 * *"
+    - cron: "17 3 * * 1"
   workflow_dispatch:
 
 permissions:
