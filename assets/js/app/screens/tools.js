@@ -7,10 +7,11 @@ const GROUPS = [
     ["🤝", "Rewards and referral", "Invite friends and convert coins", "#/rewards"],
   ]],
   ["Elite insights", [
+    ["👑", "VIP signal rooms", "Forex & gold · crypto scalping · crypto futures", "#/vip", "elite"],
     ["🏆", "Best Trades", "Top setups in every market", "#/best", "elite"],
     ["🐋", "Whale and unusual activity", "Big orders, pumps and dumps radar", "#/activity", "elite"],
-    ["🥇", "Gold deep analysis", "7-day free trial", "#/gold", "elite"],
-    ["₿", "BTC deep analysis", "7-day free trial", "#/btc", "elite"],
+    ["🥇", "Gold deep analysis", "10-day free trial", "#/gold", "elite"],
+    ["₿", "BTC deep analysis", "10-day free trial", "#/btc", "elite"],
   ]],
   ["Analysis", [
     ["🤖", "AI chart analyzer", "Analyze any pair or upload a chart", "#/ai"],
@@ -38,7 +39,7 @@ const GROUPS = [
 export default async function tools(ctx) {
   ctx.top({ title: "Tools", sub: "Your trading toolkit" });
   const p = plan();
-  const hero = p === "elite" ? "" : html`<a class="banner upgrade pro-strip" href="#/upgrade?plan=${p === "free" ? "premium" : "elite"}"><span class="emo">🔓</span><span><b>${p === "free" ? "Unlock every Pro tool" : "Go Elite for the full toolkit"}</b><span class="muted">${p === "free" ? "Premium removes full-screen ads and opens every market, timeframe and the full academy." : "Best Trades, whale radar, gold and BTC deep analysis."}</span></span><span class="btn btn-gold btn-sm">Upgrade</span></a>`;
+  const hero = p === "elite" ? "" : html`<a class="banner upgrade pro-strip" href="#/upgrade?plan=${p === "free" ? "premium" : "elite"}"><span class="emo">🔓</span><span><b>${p === "free" ? "Unlock every Pro tool" : "Go Elite for the full toolkit"}</b><span class="muted">${p === "free" ? "Premium removes full-screen ads and opens every market, timeframe and the full academy." : "VIP signal rooms, Best Trades, whale radar, gold and BTC deep analysis."}</span></span><span class="btn btn-gold btn-sm">Upgrade</span></a>`;
   ctx.render(html`${hero}${GROUPS.map(([g, items]) => html`<section class="panel"><div class="panel-head"><h2>${g}</h2></div><div class="list">
     ${items.map(([emo, name, desc, href, tier]) => {
       const locked = (tier === "elite" && p !== "elite") || (tier === "premium" && p === "free");

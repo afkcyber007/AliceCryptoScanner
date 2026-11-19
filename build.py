@@ -416,7 +416,7 @@ def write_page(path: str, *, title: str, description: str, body: str, nav: str =
         "lang_code": lang.upper(),
         "dock": tg_dock(dock or dock_kind(path)),
     }
-    for key in ("scanner", "tools", "learn", "news", "robots", "pricing", "download"):
+    for key in ("scanner", "tools", "vip", "learn", "news", "robots", "pricing", "download"):
         ctx[f"nav_{key}"] = ' aria-current="page"' if nav == key else ""
     html_out = seo_fit(localize(render(read(TPL / "base.html"), ctx), lang), path)
     dest = OUT / path / "index.html" if not path.endswith(".html") else OUT / path
@@ -491,7 +491,8 @@ DEFAULT_PLANS = [
         "Unlimited market analysis", "AI chart analyzer, 15 a day", "AI economic-calendar impact",
         "Full trading academy including the Pro module", "40 alerts including breakout, volume and trend"]},
     {"id": "elite", "label": "Elite", "monthly": 15, "yearly": 90, "features": [
-        "Everything in Premium", "Every crypto pair in the scanner", "Gold and BTC deep analysis with trade plans",
+        "Everything in Premium", "VIP signal rooms: forex & gold, crypto scalping and crypto futures, with alerts",
+        "Every crypto pair in the scanner", "Gold and BTC deep analysis with trade plans",
         "Whale and unusual activity radar with alerts", "Best Trades: the top setups in every market",
         "Unlimited alerts", "AI chart analyzer, 50 a day", "Priority support"]},
 ]
@@ -583,7 +584,7 @@ FREE_TOOLS = [  # emoji, name, description, app route
 ]
 PRO_TOOLS = [  # emoji, name, description, tier, app route
     ("🏆", "Best Trades", "Top setups in every market with entry, stop loss and two targets", "elite", "#/best"),
-    ("🥇", "Gold and BTC deep analysis", "Daily verdict and trade plan. 7-day free trial for everyone", "elite", "#/gold"),
+    ("🥇", "Gold and BTC deep analysis", "Daily verdict and trade plan. Included in the 10-day free trial", "elite", "#/gold"),
     ("🐋", "Whale and unusual activity radar", "Big orders, pumps, dumps and money flow with instant alerts", "elite", "#/activity"),
     ("🌐", "Every market and timeframe", "All forex pairs, gold, oil, indices, US stocks and 1M to 1M", "premium", "#/scanner"),
     ("🧭", "Multi-timeframe matrix", "15M, 1H, 4H and 1D scores side by side", "premium", "#/scanner"),
@@ -599,7 +600,8 @@ COMPARE = [  # feature, free, premium, elite   ("✓" = included, "🔒" = locke
     ("Crypto pairs", "Top 40", "Top 50%", "Every pair"),
     ("Forex, gold, oil, indices, US stocks", "Major pairs", "✓", "✓"),
     ("Best Trades", "🔒", "🔒", "✓"),
-    ("Gold and BTC deep analysis", "7-day trial", "7-day trial", "✓"),
+    ("VIP signal rooms (forex, crypto scalping, crypto futures)", "10-day trial", "🔒", "✓"),
+    ("Gold and BTC deep analysis", "10-day trial", "🔒", "✓"),
     ("Whale and unusual activity radar", "Preview", "Preview", "✓ + alerts"),
     ("Market analysis", "3 a day", "Unlimited", "Unlimited"),
     ("AI chart analyzer", "1 a day", "15 a day", "50 a day"),
@@ -884,6 +886,122 @@ def build_pages() -> None:
                    body=page, jsonld=ld(ORG, crumbs_ld(crumbs)), sitemap=("0.3", ""))
 
 
+
+# --------------------------------------------------------------------------- robot product box + VIP rooms (shared blocks)
+def robot_box_html(app: str = "", compact: bool = False) -> str:
+    """The trading robot as a boxed product: 3D software box, discounted price, buy buttons."""
+    app = app or f"{BASE}app/"
+    price, was = SITE.get("robot_price", 100), SITE.get("robot_price_was", 300)
+    off = round(100 - price / was * 100) if was else 0
+    tg = esc(SITE.get("forex_support", SITE.get("robot_admin", "")))
+    ch = esc(SITE.get("robot_channel", ""))
+    return f'''<section class="robot-offer{' compact' if compact else ''}" aria-labelledby="robot-offer-h">
+  <div class="ro-box" aria-hidden="true">
+    <div class="ro-3d"><div class="ro-front"><span class="ro-brand">ALICE</span><b>AUTO TRADER</b><span class="ro-ea">EA · MT4 / MT5</span>
+      <span class="ro-chart"><i></i><i></i><i></i><i></i><i></i><i></i></span><span class="ro-tags">Forex · Gold · 24/5</span></div>
+      <div class="ro-side">ALICE AUTOMATIC TRADING ROBOT</div><div class="ro-top"></div></div>
+    <span class="ro-sale">-{off}%</span>
+  </div>
+  <div class="ro-copy">
+    <span class="eyebrow">[[Automatic trading robot]]</span>
+    <h2 id="robot-offer-h">[[Alice Forex & Gold Trading Robot (EA)]]</h2>
+    <p class="muted">[[A ready-to-run expert advisor for MetaTrader 4 and 5. It trades for you 24/5 with a stop loss on every trade. Backtest: 98.14% winning trades, profit factor 19.33.]]</p>
+    <div class="ro-price"><b>{price:g} USDT</b><s>{was:g} USDT</s><span class="tag gold">[[Launch discount]]</span></div>
+    <ul class="ticks">
+      <li>{ICONS["check"]}<span>[[One-time payment, no monthly fee]]</span></li>
+      <li>{ICONS["check"]}<span>[[Setup help and VPS guide from our team]]</span></li>
+      <li>{ICONS["check"]}<span>[[Weekly live results in our Telegram channel]]</span></li>
+    </ul>
+    <div class="hero-actions">
+      <a class="btn btn-fx btn-lg ro-buy" href="{app}#/pay/robot/once">🛒 [[Buy now with USDT]]</a>
+      <a class="btn btn-line" href="{tg}" target="_blank" rel="noopener">{ICONS["tgfill"]} [[Buy on Telegram]]</a>
+      {'' if compact else f'<a class="btn btn-line" href="{ch}" target="_blank" rel="noopener">[[See live results]]</a>'}
+    </div>
+    <p class="note">[[Payments are checked by our team; you get the robot files and setup guide after approval. Past results do not guarantee future results.]]</p>
+  </div>
+</section>'''
+
+
+VIP_FEEDS = [
+    ("forex", "forex-signals", "💹", "Forex & Gold VIP Signals",
+     "5–7 forex, gold, silver and index entries a day plus gold scalps in London and New York. ~30 indicators, the news and the economic calendar must agree.", "fx"),
+    ("crypto_scalp", "crypto-scalping-signals", "⚡", "Crypto Scalping Signals",
+     "Breakout and squeeze entries on the 15-minute chart across ~1,000 Binance spot pairs and perpetuals, with three targets.", "cr"),
+    ("crypto_futures", "crypto-futures-signals", "🏦", "Crypto Futures Signals",
+     "USDT-M perpetual entries confirmed on 15m, 1H and 4H, a volume surge and the Bitcoin trend. Five targets, stop to break-even after TP2.", "cr"),
+]
+
+
+def vip_cards_html(app: str = "", heading: bool = True) -> str:
+    app = app or f"{BASE}app/"
+    cards = "".join(f'''<article class="vip-room {cls}" data-vip-feed="{fid}">
+  <span class="vr-emo">{emo}</span><h3><a href="{BASE}{slug}/">[[{esc(title)}]]</a></h3><p>[[{esc(desc)}]]</p>
+  <div class="vr-stats"><span><b data-k="win_rate">–</b>[[win rate, 30 days]]</span><span><b data-k="closed">–</b>[[closed signals]]</span><span><b data-k="all_targets">–</b>[[hit every target]]</span></div>
+  <div class="vr-wins" data-k="wins"></div>
+  <div class="hero-actions"><a class="btn {'btn-blue' if cls == 'fx' else 'btn-green'} btn-sm" href="{app}#/vip/{fid}">[[Open the room]]</a><a class="btn btn-line btn-sm" href="{BASE}{slug}/">[[How it works]]</a></div>
+</article>''' for fid, slug, emo, title, desc, cls in VIP_FEEDS)
+    head = ('''<div class="section-head center"><span class="eyebrow">[[VIP signal rooms]]</span>
+  <h2>[[Forex, gold and crypto signals with live alerts]]</h2>
+  <p>[[Three signal engines run 24/7 on our server. Every signal is tracked to its targets and stop on real candles, so the results you see are real. Elite members, and everyone in the 10-day free trial, get every entry the moment it is published.]]</p></div>'''
+            if heading else "")
+    return f'''{head}<div class="vip-rooms-grid" data-vip-results>{cards}</div>'''
+
+
+def meter_section_html(app: str = "") -> str:
+    app = app or f"{BASE}app/"
+    return f'''<div class="section-head center"><span class="eyebrow">[[Live market mood]]</span>
+  <h2>[[Market mood meter: the strongest bullish and bearish markets]]</h2>
+  <p>[[The needles read the 1-hour Alice scanner across crypto, forex, gold and indices. Left is bearish, right is bullish.]]</p></div>
+<div class="mood-meter" id="mood-meter" data-app="{app}"><p class="muted center">[[Loading the market mood…]]</p></div>'''
+
+
+def build_vip_pages(arts: list[dict]) -> None:
+    app = f"{BASE}app/"
+    hub = [("Home", ""), ("VIP signals", "vip-signals/")]
+    guides = "".join(post_card(a) for a in arts if a["category"] in ("strategy", "crypto", "forex", "gold"))[:0]
+    for src, path in (("index", "vip-signals/"), ("forex-signals", "forex-signals/"),
+                      ("crypto-scalping-signals", "crypto-scalping-signals/"), ("crypto-futures-signals", "crypto-futures-signals/")):
+        meta, text = front_matter(read(CONTENT / "vip" / f"{src}.md"))
+        main_md, faq = split_faq(text)
+        body_html, _ = md_to_html(main_md)
+        feed = meta.get("feed", "")
+        crumbs = hub + ([(meta["h1"], path)] if src != "index" else [])
+        crypto = feed.startswith("crypto")
+        tg_key = "crypto" if crypto else "forex"
+        room_btn = f'{app}#/vip/{feed or "forex"}'
+        cards = vip_cards_html(app, heading=False) if not feed else \
+            vip_cards_html(app, heading=False).replace('<div class="vip-rooms-grid"', '<div class="vip-rooms-grid single"')
+        if feed:   # keep only this feed's card
+            keep = re.search(rf'<article class="vip-room [a-z]+" data-vip-feed="{feed}">.*?</article>', cards, re.S).group(0)
+            cards = f'<div class="vip-rooms-grid single" data-vip-results>{keep}</div>'
+        others = "".join(f'<a class="tool-link" href="{BASE}{slug}/"><span class="ic" aria-hidden="true">{emo}</span><span><b>{esc(title)}</b>'
+                         f'<span>{esc(desc[:70])}…</span></span></a>' for fid, slug, emo, title, desc, _c in VIP_FEEDS if fid != feed)
+        page = f'''<div class="wrap vip-page {'acc-cr' if crypto else 'acc-fx'}">
+  <header class="page-head">{crumbs_html(crumbs)}<span class="tag gold">[[Elite · free in the 10-day trial]]</span>
+    <h1>{esc(meta["h1"])}</h1><p class="lead">{esc(meta["intro"])}</p>
+    <div class="hero-actions"><a class="btn btn-gold btn-lg" href="{room_btn}">👑 [[Open the VIP room]]</a>
+      <a class="btn btn-line" href="{app}#/signup">[[Start the 10-day free trial]]</a></div></header>
+  <section aria-label="Live track record">{cards}</section>
+  {ad("slot-top")}
+  <div class="layout">
+    <article><div class="prose">{shortcodes(body_html)}</div>
+      <h2 style="margin-top:44px">Frequently asked questions</h2>{faq_html(faq)}
+      <p class="disclaimer">Trading signals are analysis, not financial advice or a promise of profit. Trading forex, gold and crypto, especially with leverage, carries a high risk of loss. Always use the stop loss and only risk money you can afford to lose.</p>
+    </article>
+    <aside><div class="side-card rb-side"><b>👑 VIP signal rooms</b><p>Every entry, target and stop with instant alerts. Elite 15 USDT a month · free for 10 days.</p>
+        <a class="btn btn-gold btn-sm btn-block" href="{room_btn}">Open the room</a></div>
+      {f'<div class="side-card"><b>Other rooms</b><div class="tool-list">{others}</div></div>' if others else ''}
+      {tg_cta(tg_key)}{ad("slot-sidebar", "ad-side")}</aside>
+  </div>
+</div>'''
+        svc = {"@type": "Service", "name": meta["h1"], "url": url(path), "serviceType": "Trading signals",
+               "provider": {"@id": url("#org")}, "areaServed": "Worldwide", "description": meta["description"],
+               "offers": {"@type": "Offer", "price": "15", "priceCurrency": "USD", "description": "Elite plan, monthly · 10-day free trial"}}
+        write_page(path, title=meta["title"], description=meta["description"], body=page, nav="vip",
+                   jsonld=ld(ORG, svc, crumbs_ld(crumbs), faq_ld(faq)), dock="crypto" if crypto else ("forex" if feed else ""),
+                   extra_js=f'<script src="{BASE}assets/js/live-widgets.js?v={VERSION}" defer></script>', sitemap=("0.9", TODAY.isoformat()))
+
+
 def build_home(arts: list[dict], lang: str) -> None:
     app = app_url(lang)
     body = render(read(TPL / "home.html"), {
@@ -895,6 +1013,8 @@ def build_home(arts: list[dict], lang: str) -> None:
         "join": esc(SITE.get("telegram_join", "")), "bot": esc(SITE.get("telegram_bot", "")),
         "fx_room": esc(SITE.get("forex_channel", "")), "crypto_ch": esc(SITE.get("crypto_channel", "")),
         "robot_ch": esc(SITE.get("robot_channel", "")), "robot_buy": esc(SITE.get("robot_admin", "")),
+        "fx_support": esc(SITE.get("forex_support", "")), "cr_support": esc(SITE.get("crypto_support", "")),
+        "meter": meter_section_html(app), "vip_section": vip_cards_html(app), "robot_box": robot_box_html(app),
     })
     app_ld = {"@type": "SoftwareApplication", "name": "Alice Forex/Crypto Scanner", "operatingSystem": "Android, iOS, Web",
               "applicationCategory": "FinanceApplication", "url": url(), "image": url("static/img/icons/icon-512.png"),
@@ -908,10 +1028,10 @@ def build_home(arts: list[dict], lang: str) -> None:
         f'\n<link rel="alternate" hreflang="x-default" href="{url()}">'
     title = ("Free Crypto, Forex & Gold Scanner | Alice Forex/Crypto Scanner" if lang == "en" else
              localize("[[Alice Forex/Crypto Scanner: free crypto, forex and gold market scanner]]", lang))
-    desc = localize("[[Free crypto, forex and gold market scanner. Every market scored 0–100, Best Trades, Gold & BTC deep analysis, alerts and pro trading tools. Works on Android, iPhone and desktop.]]", lang)
+    desc = localize("[[Crypto, forex and gold scanner with VIP signal rooms, a market mood meter, Gold & BTC deep analysis and alerts. 10-day free trial on Android, iPhone and web.]]", lang)
     write_page(lang_home(lang), title=title, og_title="Alice Forex/Crypto Scanner", description=desc,
                body=localize(body, lang), jsonld=ld(ORG, website, app_ld, faq_ld(faq_items)),
-               extra_js=f'<script src="{BASE}assets/js/board.js?v={VERSION}" defer></script>', sitemap=("1.0" if lang == "en" else "0.8", ""),
+               extra_js=f'<script src="{BASE}assets/js/board.js?v={VERSION}" defer></script><script src="{BASE}assets/js/live-widgets.js?v={VERSION}" defer></script>', sitemap=("1.0" if lang == "en" else "0.8", ""),
                body_class="home", lang=lang, alternates=alternates)
 
 
@@ -1125,7 +1245,7 @@ def tg_cta(kind: str) -> str:
 TOOL_CTAS = {
     "crypto": ("Scan every crypto pair with Alice", "Scores from 0 to 100 on every timeframe, whale radar, funding and open interest, and Best Trades with entry, stop loss and targets.", "Free + Elite", "#/scanner"),
     "forex": ("Find the strongest forex setups", "Forex scanner, currency strength meter, sessions and the economic calendar with AI impact analysis.", "Free + Premium", "#/strength"),
-    "gold": ("Get today's gold trade plan", "Daily XAU/USD verdict with key levels, entry zone, stop loss and two targets. 7-day free trial.", "Elite", "#/gold"),
+    "gold": ("Get today's gold trade plan", "Daily XAU/USD verdict with key levels, entry zone, stop loss and two targets. Free in the 10-day trial.", "Elite", "#/gold"),
     "strategy": ("Let Alice find the setups", "Best Trades: the top setups in every market with entry, stop loss and two targets, updated all day.", "Elite", "#/best"),
     "basics": ("Practise with the free tools", "Position size and risk calculator, Fibonacci, pivots, alerts and the trading academy.", "Free", "#/tools"),
     "news": ("Turn the news into a plan", "Check the scanner score, the economic calendar and the AI chart analyzer before you trade the headline.", "Free", "#/calendar"),
@@ -1391,7 +1511,7 @@ def build_robots(arts: list[dict]) -> None:
     hl = ('<div class="rb-stats"><div><b>98.14%</b><span>winning trades</span></div><div><b>19.33</b><span>profit factor</span></div>'
           '<div><b>+2,491%</b><span>net profit in the backtest</span></div><div><b>645</b><span>trades tested tick by tick</span></div></div>'
           f'<p class="note rb-note">Forex EA, EUR/USD M1 backtest in MetaTrader 4 with every-tick modelling. <a href="{BASE}trading-robots/forex-ea/#bt-h">See the full report and risk figures</a>.</p>')
-    shell("", meta, main_md, faq, f'<div class="rb-cards">{cards}</div>{hl}', "")
+    shell("", meta, main_md, faq, f'{robot_box_html(compact=True)}<div class="rb-cards">{cards}</div>{hl}', "")
 
     # forex robot with the backtest report
     meta, text = front_matter(read(CONTENT / "robots" / "forex-ea.md"))
@@ -1413,7 +1533,7 @@ def build_robots(arts: list[dict]) -> None:
   </div>
   <p class="note">Backtest on historical data with lot sizes that grow with the balance. Live results differ with broker, spread and slippage, which is why we publish live results every week.</p>
 </section>'''
-    shell("forex-ea", meta, main_md, faq, bt, "forex")
+    shell("forex-ea", meta, main_md, faq, robot_box_html(compact=True) + bt, "forex")
 
     for slug, market in (("gold-ea", "gold"), ("crypto-trading-bot", "crypto")):
         meta, text = front_matter(read(CONTENT / "robots" / f"{slug}.md"))
@@ -1422,7 +1542,7 @@ def build_robots(arts: list[dict]) -> None:
                  '<div><b>SL + TP</b><span>on every trade, automatically</span></div>'
                  f'<div><b>{"MT5" if market == "crypto" else "MT4 · MT5"}</b><span>any broker that allows EAs</span></div>'
                  '<div><b>Weekly</b><span>live results on Telegram</span></div></div>')
-        shell(slug, meta, main_md, faq, tiles, market)
+        shell(slug, meta, main_md, faq, (robot_box_html(compact=True) if market == "gold" else "") + tiles, market)
 
 BOT_TOOLS = [  # short labels for the public Telegram bot (two buttons per row)
     ("📡 Market Scanner", "app:#/scanner"), ("🏆 Best Trades", "app:#/best"),
@@ -1435,7 +1555,7 @@ BOT_TOOLS = [  # short labels for the public Telegram bot (two buttons per row)
     ("🎓 Trading Academy", "app:#/academy"), ("💬 Discussion Rooms", "app:#/chat/crypto"),
     ("🎡 Spin & Earn", "app:#/spin"), ("🏦 Best Exchanges", "site:best-forex-crypto-exchanges/"),
     ("🧰 Free Calculators", "site:tools/"), ("📚 Trading Guides", "site:learn/"),
-    ("🤖 Trading Robots (EA)", "site:trading-robots/"), ("💱 Forex Robot Results", "site:trading-robots/forex-ea/"),
+    ("👑 VIP Signal Rooms", "app:#/vip"), ("🤖 Trading Robots (EA)", "site:trading-robots/"),
 ]
 
 
@@ -1516,6 +1636,8 @@ def build_meta() -> None:
     ads_txt = read(ROOT / "ads" / "ads.txt").strip()
     if ads_txt:
         (OUT / "ads.txt").write_text(ads_txt + "\n", encoding="utf-8")
+        # AdMob reads app-ads.txt on the "developer website" of the Play Store listing — without it ads are limited
+        (OUT / "app-ads.txt").write_text(ads_txt + "\n", encoding="utf-8")
     manifest = {
         "name": "Alice Forex/Crypto Scanner", "short_name": "Alice Scanner", "id": BASE + "app/",
         "description": "Crypto, forex and gold market scanner with Best Trades, deep analysis, alerts and pro tools.",
@@ -1557,6 +1679,10 @@ def build_ai_files(arts: list[dict]) -> None:
              f"- [Home]({url('')}): what Alice does, plans and download",
              f"- [Web app]({url('app/')}): the scanner in the browser, free sign-up",
              f"- [Pricing]({url('pricing/')}): 10-day free trial, Premium (10 USDT/month) and Elite (15 USDT/month) compared",
+             f"- [VIP trading signals]({url('vip-signals/')}): forex & gold, crypto scalping and crypto futures signal rooms with alerts and a tracked record",
+             f"- [Forex & gold VIP signals]({url('forex-signals/')}): 5-7 entries a day from a ~30-indicator + news + calendar confluence engine",
+             f"- [Crypto scalping signals]({url('crypto-scalping-signals/')}): 15-minute breakout and squeeze entries on Binance spot and perps",
+             f"- [Crypto futures signals]({url('crypto-futures-signals/')}): USDT-M perpetual entries with five targets",
              f"- [Automatic trading robots (EA)]({url('trading-robots/')}): forex, gold and crypto robots for MT4 and MT5 with weekly live results",
              f"- [Forex automatic trading robot / EA]({url('trading-robots/forex-ea/')}): EUR/USD EA with the full MT4 backtest report",
              f"- [Gold automatic trading robot / EA]({url('trading-robots/gold-ea/')}): XAU/USD expert advisor for MT4 and MT5",
@@ -1624,6 +1750,7 @@ def main() -> None:
     build_news()
     build_strength_and_exchanges()
     build_robots(arts)
+    build_vip_pages(arts)
     build_bot_menu()
     build_app()
     build_meta()

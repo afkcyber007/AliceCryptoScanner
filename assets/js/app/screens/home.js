@@ -1,7 +1,7 @@
 /* Home: prices, offers, discussion rooms, shortcuts, market pulse, top setups, events and heatmap. */
 import { A, html, raw, api, cached, session, plan, isPaid, price, pct, upDown, toMs, dateTime, icon, skeleton, errorBox, loadConfig, ago } from "../core.js";
 import { lang } from "../i18n.js";
-import { MARKETS, setupRow, quoteCard, offerBox, tickOffers, promoBox, wirePromo, detailHref } from "../components.js";
+import { MARKETS, setupRow, quoteCard, detailHref, meterPanel } from "../components.js";
 
 export default async function home(ctx) {
   const u = session.user;
@@ -10,7 +10,7 @@ export default async function home(ctx) {
   const hello = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
   ctx.top({ title: "Home", sub: "Alice Forex/Crypto Scanner" });
   let market = "crypto";
-  let ov = null, brief = null, events = [], notes = [];
+  let ov = null, brief = null, events = [], notes = [], meter = null, meterGroup = "crypto";
 
   const draw = () => {
     const cfg = session.config || {};
@@ -25,8 +25,9 @@ export default async function home(ctx) {
 
       <div class="row-scroll">${ov ? (ov.quotes || []).map(quoteCard) : raw('<div class="skel" style="height:78px;width:100%"></div>')}</div>
 
-      ${offerBox(cfg.offer)}
-      ${promoBox(cfg.promo)}
+      ${meterPanel(meter, meterGroup)}
+
+      <a class="banner vip" href="#/vip"><span class="emo">👑</span><span><b>VIP Signal Rooms</b><span>Forex & gold, crypto scalping and crypto futures signals with live alerts.${p === "elite" ? "" : " Elite · free in your 10-day trial."}</span></span><span aria-hidden="true">${icon.chev}</span></a>
 
       <section>
         <div class="panel-head" style="margin-bottom:10px"><h2 style="font-size:18px;color:var(--gold)">Market discussion rooms</h2><span class="note">Join traders live</span></div>
@@ -37,14 +38,14 @@ export default async function home(ctx) {
       </section>
 
       <div class="tiles">
-        <a class="tile gold" href="#/best"><span class="emo">🏆</span><b>Best Trades today</b><span>${p === "elite" ? "Top setups in every market" : "Elite: top setups, entry and targets"}</span></a>
+        <a class="tile gold" href="#/vip"><span class="emo">👑</span><b>VIP signals</b><span>Forex, gold and crypto rooms with alerts</span></a>
         <a class="tile dark" href="#/activity"><span class="emo">🐋</span><b>Whale radar</b><span>Big orders, pumps and dumps</span></a>
         <a class="tile blue" href="#/ai"><span class="emo">🤖</span><b>AI chart analyzer</b><span>Analyze any pair or screenshot</span></a>
         <a class="tile violet" href="#/strength"><span class="emo">⏰</span><b>Market hours</b><span>Sessions and currency strength</span></a>
       </div>
 
-      <a class="banner gold" href="#/gold"><span class="emo">🥇</span><span><b>Gold deep analysis</b><span>Dollar, yields, events and news in one verdict. Elite, 7-day free trial.</span></span><span aria-hidden="true">${icon.chev}</span></a>
-      <a class="banner btc" href="#/btc"><span class="emo">₿</span><span><b>BTC deep analysis</b><span>Stocks, dollar, futures, whales and news. Elite, 7-day free trial.</span></span><span aria-hidden="true">${icon.chev}</span></a>
+      <a class="banner gold" href="#/gold"><span class="emo">🥇</span><span><b>Gold deep analysis</b><span>Dollar, yields, events and news in one verdict. Elite · included in the 10-day free trial.</span></span><span aria-hidden="true">${icon.chev}</span></a>
+      <a class="banner btc" href="#/btc"><span class="emo">₿</span><span><b>BTC deep analysis</b><span>Stocks, dollar, futures, whales and news. Elite · included in the 10-day free trial.</span></span><span aria-hidden="true">${icon.chev}</span></a>
       <a class="banner spin" href="#/spin"><span class="emo">🎡</span><span><b>Spin and earn Premium free</b><span>Spin daily and invite friends. Coins turn into Premium and Elite.</span></span><span aria-hidden="true">${icon.chev}</span></a>
       <a class="banner channel" href="${A.channel || "https://t.me/AliceCryptoPro_Official"}" target="_blank" rel="noopener"><span class="emo">📣</span><span><b>Free daily analysis on Telegram</b><span>Gold, BTC and forex outlook every day from the Alice team.</span></span><span class="btn btn-sm btn-tg">Join</span></a>
       <a class="banner exch" href="#/exchanges"><span class="emo">🏦</span><span><b>Best exchanges and brokers</b><span>Sign-up bonuses, low fees, and free Premium or Elite when you join with our link.</span></span><span aria-hidden="true">${icon.chev}</span></a>
@@ -62,7 +63,7 @@ export default async function home(ctx) {
         </section>
       </div>
 
-      ${p === "free" ? html`<a class="banner upgrade" href="#/upgrade"><span class="emo">⭐</span><span><b>Unlock Best Trades and the full scanner</b><span class="muted">No ads, every market and timeframe, AI analyzer, full academy</span></span><span class="btn btn-gold btn-sm">Upgrade</span></a>` : ""}
+      ${p === "free" ? html`<a class="banner upgrade" href="#/upgrade"><span class="emo">⭐</span><span><b>Unlock VIP signals and the full scanner</b><span class="muted">Premium 10 USDT · Elite 15 USDT a month, every market and timeframe</span></span><span class="btn btn-gold btn-sm">Upgrade</span></a>` : ""}
 
       <section class="panel">
         <div class="panel-head"><h2>Top setups, 1 hour</h2><a href="#/scanner?market=${market}">Open scanner</a></div>
@@ -79,15 +80,17 @@ export default async function home(ctx) {
 
       <p class="note center">Market data and analysis for education only, not financial advice.</p>
     `);
-    tickOffers(ctx.view); wirePromo(ctx.view);
   };
 
   ctx.on("[data-market]", "click", (e, b) => { market = b.dataset.market; draw(); });
+  ctx.on("[data-meter]", "click", (e, b) => { meterGroup = b.dataset.meter; draw(); });
   draw();
   const load = async () => {
-    const [o, b, c, a] = await Promise.allSettled([
+    const [o, b, c, a, m] = await Promise.allSettled([
       api("/api/markets/overview", { auth: false }), cached("/api/market/brief", 300000), cached("/api/calendar", 600000), cached("/api/announcements?client=web", 600000),
+      api("/api/markets/meter", { auth: false }),
     ]);
+    if (m.status === "fulfilled") meter = m.value;
     if (o.status === "fulfilled") ov = o.value;
     else if (!ov) { ctx.render(errorBox(o.reason)); return; }
     if (b.status === "fulfilled") brief = b.value;
@@ -97,6 +100,5 @@ export default async function home(ctx) {
   };
   await load();
   ctx.every(60000, load);
-  ctx.every(1000, () => tickOffers(ctx.view));
   ctx.every(180000, () => loadConfig(true).then(draw));
 }

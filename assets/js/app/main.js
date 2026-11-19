@@ -12,7 +12,9 @@ const S = (file) => () => import("./screens/" + file + ".js?v=" + (A.v || ""));
 route("/home", S("home"), { tab: "home" });
 route("/scanner", S("scanner"), { tab: "scanner" });
 route("/m/:market/:symbol", S("detail"), { tab: "scanner", back: true });
-route("/best", S("insights"), { tab: "best", fn: "best" });
+route("/best", S("insights"), { tab: "tools", fn: "best", back: true });
+route("/vip", S("vip"), { tab: "vip" });
+route("/vip/:feed", S("vip"), { tab: "vip" });
 route("/activity", S("insights"), { tab: "tools", fn: "activity", back: true });
 route("/tools", S("tools"), { tab: "tools" });
 route("/gold", S("deep"), { tab: "tools", fn: "gold", back: true });
@@ -54,12 +56,12 @@ route("/forgot", S("auth"), { fn: "forgot", bare: true, back: true });
 
 /* ------------------------------------------------------------------ navigation shell */
 const TABS = [
-  ["home", "#/home", "Home", icon.home], ["scanner", "#/scanner", "Scanner", icon.radar], ["best", "#/best", "Best Trades", icon.trophy],
+  ["home", "#/home", "Home", icon.home], ["scanner", "#/scanner", "Scanner", icon.radar], ["vip", "#/vip", "VIP Signals", icon.trophy],
   ["tools", "#/tools", "Tools", icon.grid], ["profile", "#/profile", "Profile", icon.user],
 ];
 const SIDE = [
-  ["", [["home", "#/home", "Home", icon.home], ["scanner", "#/scanner", "Scanner", icon.radar], ["best", "#/best", "Best Trades", icon.trophy, "elite"], ["tools", "#/tools", "All tools", icon.grid]]],
-  ["Analysis", [["gold", "#/gold", "Gold deep analysis", icon.gold, "elite"], ["btc", "#/btc", "BTC deep analysis", icon.btc, "elite"], ["ai", "#/ai", "AI chart analyzer", icon.ai], ["activity", "#/activity", "Whale radar", icon.whale, "elite"]]],
+  ["", [["home", "#/home", "Home", icon.home], ["scanner", "#/scanner", "Scanner", icon.radar], ["vip", "#/vip", "VIP signal rooms", icon.trophy, "elite"], ["tools", "#/tools", "All tools", icon.grid]]],
+  ["Analysis", [["best", "#/best", "Best Trades", icon.chart || icon.radar, "elite"], ["gold", "#/gold", "Gold deep analysis", icon.gold, "elite"], ["btc", "#/btc", "BTC deep analysis", icon.btc, "elite"], ["ai", "#/ai", "AI chart analyzer", icon.ai], ["activity", "#/activity", "Whale radar", icon.whale, "elite"]]],
   ["Market", [["alerts", "#/alerts", "Alerts", icon.bell], ["calendar", "#/calendar", "Economic calendar", icon.cal], ["news", "#/news", "News", icon.news], ["hours", "#/strength", "Strength and hours", icon.clock], ["chat", "#/chat/crypto", "Discussion rooms", icon.chat]]],
   ["You", [["rewards", "#/rewards", "Rewards and coins", icon.coin], ["spin", "#/spin", "Spin and earn", icon.wheel], ["journal", "#/journal", "Trading journal", icon.journal], ["academy", "#/academy", "Academy", icon.book], ["exchanges", "#/exchanges", "Best exchanges", icon.bank], ["robots", (A.base || "/") + "trading-robots/", "Trading robots (EA)", icon.ai]]],
   ["Settings", [["notifications", "#/notifications", "Notifications", icon.bell], ["language", "#/language", "Language", icon.globe], ["profile", "#/profile", "Profile", icon.user]]],
@@ -69,7 +71,7 @@ function drawShell(activeTab, path) {
     `<a href="${href}" class="${id === activeTab ? "on" : ""}" ${id === activeTab ? 'aria-current="page"' : ""}><i>${ic}</i><span>${label}</span></a>`).join("");
   const p = plan();
   $("#side-nav").innerHTML = SIDE.map(([g, items]) => (g ? `<div class="side-group">${g}</div>` : "") + items.map(([id, href, label, ic, tier]) => {
-    const on = path === href.slice(1) || (id === "chat" && path.startsWith("/chat")) || (id === activeTab && ["home", "scanner", "best", "profile"].includes(id) && path.split("/").length <= 2 && path === "/" + id);
+    const on = path === href.slice(1) || (id === "chat" && path.startsWith("/chat")) || (id === activeTab && ["home", "scanner", "vip", "profile"].includes(id) && path.split("/").length <= 2 && path === "/" + id);
     const lock = tier === "elite" && p !== "elite" ? `<span class="tag gold">Elite</span>` : "";
     return `<a href="${href}" class="${on ? "on" : ""}">${ic}<span>${label}</span>${lock}</a>`;
   }).join("")).join("");
@@ -147,7 +149,7 @@ function daysLeft() {
   const end = Number((session.user || {}).trial_ends_at || 0);
   return end ? Math.max(0, Math.ceil((end - Date.now()) / 864e5)) : TRIAL_DAYS;
 }
-const PERKS = ["Every market scored 0 to 100 on every timeframe", "Best Trades with entry, stop loss and two targets",
+const PERKS = ["Every market scored 0 to 100 on every timeframe", "VIP signal rooms: forex & gold, crypto scalping and futures",
   "Gold and BTC deep analysis, AI chart analyzer and whale radar", "Alerts, news, calendar and all pro tools"];
 function gateFor(path) {
   if (OPEN_ROUTES.test(path)) return "";

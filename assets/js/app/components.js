@@ -124,3 +124,40 @@ export function sponsoredBreak(seconds = 6, title = "Your reward is almost ready
     btn.addEventListener("click", () => { bg.remove(); resolve(true); });
   });
 }
+
+/* ------------------------------------------------------------------ market mood meter (needle gauge) */
+/** Semicircle gauge: 0 = strong bearish (left), 100 = strong bullish (right). */
+export function gauge(value, { size = 220, label = "", sub = "" } = {}) {
+  const v = Math.max(0, Math.min(100, Number(value) || 50));
+  const ang = -90 + v * 1.8;
+  const seg = (a0, a1, c) => {
+    const r = 80, cx = 100, cy = 100, p = (a) => [cx + r * Math.cos((a - 180) * Math.PI / 180), cy + r * Math.sin((a - 180) * Math.PI / 180)];
+    const [x0, y0] = p(a0), [x1, y1] = p(a1);
+    return `<path d="M${x0.toFixed(1)} ${y0.toFixed(1)} A80 80 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}" stroke="${c}" stroke-width="16" fill="none"/>`;
+  };
+  const cls = v >= 55 ? "up" : v <= 45 ? "down" : "";
+  return raw(`<div class="gauge" style="width:${size}px">
+    <svg viewBox="0 0 200 118" role="img" aria-label="${label || "Market mood"}: ${Math.round(v)} of 100">
+      ${seg(0, 35, "#EA3943")}${seg(36, 71, "#F0766E")}${seg(72, 107, "#8A94A8")}${seg(108, 143, "#5BD49A")}${seg(144, 180, "#16C784")}
+      <g class="gauge-needle" style="transform:rotate(${ang}deg)"><path d="M97 100 L100 26 L103 100 Z" fill="currentColor"/></g>
+      <circle cx="100" cy="100" r="9" fill="currentColor"/><circle cx="100" cy="100" r="4" fill="var(--bg)"/>
+      <text x="16" y="116" font-size="10" fill="#EA3943">Bearish</text><text x="184" y="116" font-size="10" fill="#16C784" text-anchor="end">Bullish</text>
+    </svg>
+    <div class="gauge-v ${cls}">${Math.round(v)}</div>${label ? `<div class="gauge-l">${label}</div>` : ""}${sub ? `<div class="gauge-s">${sub}</div>` : ""}</div>`);
+}
+
+/** Market mood meter panel (overall needle + one needle per market + strongest bullish / bearish lists). */
+export function meterPanel(m, group = "crypto") {
+  if (!m || !m.groups || !Object.keys(m.groups).length) return "";
+  const g = m.groups[group] || m.groups[Object.keys(m.groups)[0]];
+  const row = (a) => `<a class="li" href="${detailHref(a.market, a.symbol, "1h")}"><span><span class="t">${esc(a.display)}</span><span class="s">${esc(a.label)}</span></span><span class="r"><span class="mini-meter"><i style="left:${a.score}%"></i></span><b class="${a.score >= 55 ? "up" : a.score <= 45 ? "down" : ""}">${a.score}</b></span></a>`;
+  return raw(`<section class="panel meter-panel">
+    <div class="panel-head"><h2>🧭 Market mood meter</h2><span class="note">1H scanner · live</span></div>
+    <div class="meter-top">${gauge(m.overall.value, { size: 230, label: "All markets · " + m.overall.label })}
+      <div class="meter-mini">${Object.entries(m.groups).map(([k, x]) => `<button type="button" data-meter="${k}" aria-pressed="${k === group}" class="mm">${gauge(x.value, { size: 110, label: x.name })}</button>`).join("")}</div></div>
+    <div class="grid-2 meter-lists">
+      <div><h3 class="up">📈 Strongest bullish · ${g.name}</h3><div class="list">${g.strong_bullish.length ? g.strong_bullish.map(row).join("") : '<p class="note">No strong bullish market right now.</p>'}</div></div>
+      <div><h3 class="down">📉 Strongest bearish · ${g.name}</h3><div class="list">${g.strong_bearish.length ? g.strong_bearish.map(row).join("") : '<p class="note">No strong bearish market right now.</p>'}</div></div>
+    </div>
+    <p class="note" style="margin:8px 0 0">${g.bullish} bullish · ${g.bearish} bearish of ${g.total} ${g.name.toLowerCase()} markets on the 1-hour chart.</p></section>`);
+}

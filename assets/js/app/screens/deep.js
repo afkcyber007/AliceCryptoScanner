@@ -1,4 +1,4 @@
-/* Gold and BTC deep analysis (Elite, 7-day free trial for every account). */
+/* Gold and BTC deep analysis (Elite, 10-day free trial for every account). */
 import { html, api, session, num, pct, upDown, ago, dateTime, skeleton, errorBox, gate, needLogin, labelTag, toMs } from "../core.js";
 import { partsBars } from "../components.js";
 
@@ -9,9 +9,9 @@ export const btc = (ctx) => deep(ctx, "btc");
 
 async function deep(ctx, asset) {
   const name = asset === "gold" ? "Gold" : "Bitcoin";
-  ctx.top({ title: name + " deep analysis", sub: "Elite, 7-day free trial" });
+  ctx.top({ title: name + " deep analysis", sub: "Elite, 10-day free trial" });
   if (!session.loggedIn) {
-    ctx.render(html`${needLogin("the " + name + " deep analysis")}<p class="note center">Every account gets a 7-day free trial.</p>`);
+    ctx.render(html`${needLogin("the " + name + " deep analysis")}<p class="note center">Every account gets a 10-day free trial.</p>`);
     return;
   }
   ctx.render(skeleton(1, 140) + skeleton(5, 70));

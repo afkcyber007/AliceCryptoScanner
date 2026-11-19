@@ -22,7 +22,7 @@ export async function upgrade(ctx) {
     const price = (per) => { const o = offerPrice(cfg, p.id, per); return o != null ? o : p[per]; };
     const save = Math.round(100 - price("yearly") / (price("monthly") * 12) * 100);
     ctx.render(html`
-      <section class="center" style="padding:6px 0 4px"><h2 style="font-size:clamp(22px,4vw,30px);margin:0 0 6px">Unlock the full Alice toolkit</h2><p class="muted" style="margin:0">Best Trades, every market and timeframe, AI tools and no ads. One plan works on the website, Android and iPhone.</p></section>
+      <section class="center" style="padding:6px 0 4px"><h2 style="font-size:clamp(22px,4vw,30px);margin:0 0 6px">Unlock the full Alice toolkit</h2><p class="muted" style="margin:0">VIP signal rooms, every market and timeframe, AI tools and no ads. One plan works on the website, Android and iPhone.</p></section>
       ${offerBox(cfg.offer)}
       <div class="plan-cards" role="group" aria-label="Plan">${plans.map((x) => html`<button type="button" data-plan="${x.id}" aria-pressed="${x.id === pid}"><b>${x.label}</b>${x.id === "elite" ? html` <span class="tag gold">Most complete</span>` : ""}<div class="note">From $${num(offerPrice(cfg, x.id, "yearly") ?? x.yearly)} a year</div></button>`)}</div>
       <div class="period-pick" role="group" aria-label="Billing period">
@@ -61,16 +61,17 @@ function loadQr() {
 
 export async function pay(ctx) {
   const pid = ctx.params.plan, period = ctx.params.period;
-  const name = pid === "elite" ? "Elite" : "Premium";
-  ctx.top({ title: "Pay with crypto", sub: name + ", " + period });
-  if (!["premium", "elite"].includes(pid) || !["monthly", "yearly"].includes(period)) { go("/upgrade"); return; }
+  const robot = pid === "robot";
+  const name = robot ? "Automatic trading robot (MT4/MT5 EA)" : pid === "elite" ? "Elite" : "Premium";
+  ctx.top({ title: "Pay with crypto", sub: robot ? "Trading robot · one-time" : name + ", " + period });
+  if (!robot && (!["premium", "elite"].includes(pid) || !["monthly", "yearly"].includes(period))) { go("/upgrade"); return; }
   const cfg = (await loadConfig()) || {};
   const methods = cfg.payment_methods || [];
   let method = methods.find((m) => m.id === "usdt_trc20") ? "usdt_trc20" : (methods[0] || {}).id, q = null, qErr = null, file = null, preview = "", sending = false, done = null;
   const draw = () => {
     if (done) {
       ctx.render(html`<section class="panel center" style="padding:28px 18px"><div style="font-size:44px">✅</div><h2 style="font-size:22px;margin:8px 0 6px">Payment submitted</h2>
-        <p class="muted" style="max-width:30rem;margin:0 auto 16px">${done.message || "Our team will verify it and activate your plan, usually within a few hours."}</p>
+        <p class="muted" style="max-width:30rem;margin:0 auto 16px">${done.message || (robot ? "Our team will verify it and send you the robot with the setup guide." : "Our team will verify it and activate your plan, usually within a few hours.")}</p>
         <div class="btn-row" style="justify-content:center"><a class="btn btn-gold" href="#/payments">My payments</a><a class="btn btn-line" href="${(cfg.contact && cfg.contact.telegram_url) || A.tg}" target="_blank" rel="noopener">Message support</a></div></section>`);
       return;
     }
@@ -80,7 +81,7 @@ export async function pay(ctx) {
       <section class="panel">
         <div class="panel-head"><h2>1. Send exactly</h2></div>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="font:700 30px/1.1 var(--display);color:var(--gold);font-variant-numeric:tabular-nums">${q.amount} ${q.asset}</span><button class="btn btn-line btn-sm" data-copy="${q.amount}">${icon.copy} Copy amount</button></div>
-        <p class="note" style="margin:6px 0 0">${name} ${period}, $${num(q.usd)}${q.btc_price ? ", at BTC $" + num(q.btc_price, 0) : ""}</p>
+        <p class="note" style="margin:6px 0 0">${robot ? name + ", one-time" : name + " " + period}, $${num(q.usd)}${q.btc_price ? ", at BTC $" + num(q.btc_price, 0) : ""}</p>
         <div class="panel-head" style="margin-top:18px"><h2>2. To this ${q.network} address</h2></div>
         <div class="copy-box"><span>${q.address}</span><button class="btn btn-line btn-sm" data-copy="${q.address}">${icon.copy} Copy</button></div>
         <div class="qr" id="qr" aria-label="QR code of the address"></div>
