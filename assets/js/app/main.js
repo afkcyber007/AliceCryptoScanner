@@ -75,9 +75,9 @@ function drawShell(activeTab, path) {
   }).join("")).join("");
   const u = session.user;
   const ch = (A.join ? `<a class="side-channel" href="${A.join}" target="_blank" rel="noopener">${icon.telegram}<span><b>Join our Telegram Channel</b><small>Free daily analysis and signals</small></span></a>` : "")
-    + (A.fx ? `<a class="side-channel fx" href="${A.fx}" target="_blank" rel="noopener"><i>💱</i><span><b>Join Our Forex Signals Room</b><small>Forex and gold signals</small></span></a>` : "")
-    + (A.crypto ? `<a class="side-channel cr" href="${A.crypto}" target="_blank" rel="noopener"><i>₿</i><span><b>Join our Crypto Channel</b><small>Bitcoin and altcoin setups</small></span></a>` : "")
-    + (A.robot ? `<a class="side-channel rb" href="${A.robot}" target="_blank" rel="noopener"><i>🤖</i><span><b>Forex/Gold Trading Robot</b><small>Automatic trading, weekly results</small></span></a>` : "")
+    + (A.fx ? `<a class="side-channel fx" href="${A.fx}" target="_blank" rel="noopener"><i>💹</i><span><b>Join Forex Signals Group</b><small>Free forex and gold signals</small></span></a>` : "")
+    + (A.crypto ? `<a class="side-channel cr" href="${A.crypto}" target="_blank" rel="noopener"><i>₿</i><span><b>Join Crypto Free Signals Group</b><small>Free Bitcoin and altcoin signals</small></span></a>` : "")
+    + (A.robot ? `<a class="side-channel rb" href="${A.robot}" target="_blank" rel="noopener"><i>🤖</i><span><b>Automatic Trading Robot Forex</b><small>Automatic trading, weekly results</small></span></a>` : "")
     + (A.bot ? `<a class="side-channel bot" href="${A.bot}" target="_blank" rel="noopener">${icon.telegram}<span><b>AliceCryptoScanner Bot</b><small>All tools and market news on Telegram</small></span></a>` : "");
   $("#side-foot").innerHTML = ch + (u
     ? `<div class="panel" style="padding:12px"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><b style="font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(u.name || u.email)}</b><span class="plan-badge ${p}">${p[0].toUpperCase() + p.slice(1)}</span></div>${p === "free" ? `<a class="btn btn-gold btn-sm btn-block" style="margin-top:10px" href="#/upgrade">Upgrade</a>` : ""}</div>`

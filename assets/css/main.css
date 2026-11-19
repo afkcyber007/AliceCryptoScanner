@@ -863,3 +863,54 @@ aside .tg-cta .btn { width: 100%; }
 @media (max-width: 900px) { .rb-cards, .rb-figs, .rb-tables { grid-template-columns: 1fr; } .rb-stats { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 520px) { .rb-actions a { width: 100%; } .rb-gallery { grid-template-columns: 1fr 1fr; gap: 10px; } }
 @media (prefers-reduced-motion: reduce) { .rb-buy, .rb-buy::after, .rb-pulse { animation: none; } }
+/* ---------------------------------------------------------------- Telegram colours: MT4 blue for forex, Binance green for crypto */
+:root { --mt4: #1E6BFF; --mt4-deep: #0A47C2; --bnb-green: #0ECB81; --bnb-deep: #03A66D; }
+.tg-join.fx { background: linear-gradient(135deg, #2F7BFF, var(--mt4-deep)); box-shadow: 0 12px 30px rgba(30,107,255,.45); }
+.tg-join.fx::after { border-color: rgba(47,123,255,.65); }
+.tg-join.fx .tg-ic { color: var(--mt4); }
+.tg-join.cr, .tg-join.cr2 { background: linear-gradient(135deg, #12D98B, var(--bnb-deep)); box-shadow: 0 12px 30px rgba(14,203,129,.40); text-shadow: 0 1px 1px rgba(0,0,0,.25); }
+.tg-join.cr::after, .tg-join.cr2::after { border-color: rgba(14,203,129,.65); }
+.tg-join.cr .tg-ic, .tg-join.cr2 .tg-ic { color: var(--bnb-deep); }
+.tg-dock.k-home .tg-join + .tg-join, .tg-dock.k-both .tg-join + .tg-join { animation-delay: 4.5s; }
+.tg-join .s { display: none; }
+.tg-pill.fx { background: linear-gradient(135deg, #2F7BFF, var(--mt4-deep)); }
+.tg-pill.fx2 { background: linear-gradient(135deg, #12305F, #1D4FA8); border: 1px solid rgba(47,123,255,.6); }
+.tg-pill.cr { background: linear-gradient(135deg, #12D98B, var(--bnb-deep)); }
+.tg-pill.cr2 { background: linear-gradient(135deg, #0B3D2B, #0A7D52); border: 1px solid rgba(14,203,129,.6); }
+.fab-support.fx { background: linear-gradient(135deg, #2F7BFF, var(--mt4-deep)); box-shadow: 0 10px 28px rgba(30,107,255,.5); animation: buyPulse 1.8s ease-in-out infinite; }
+.fab-support.fx::after { border-color: rgba(47,123,255,.7); animation-duration: 1.8s; }
+.fab-support.cr { background: linear-gradient(135deg, #12D98B, var(--bnb-deep)); box-shadow: 0 10px 28px rgba(14,203,129,.45); animation: buyPulse 1.8s ease-in-out infinite; }
+.fab-support.cr::after { border-color: rgba(14,203,129,.7); animation-duration: 1.8s; }
+.tg-s.fx { background: linear-gradient(135deg, #2F7BFF, var(--mt4-deep)); color: #fff; }
+.tg-s.cr { background: linear-gradient(135deg, #12D98B, var(--bnb-deep)); color: #fff; }
+.tg-cta.fx, .tg-cta.robot { background: linear-gradient(120deg, #072A6B, #0A47C2 65%, #2F7BFF); }
+.tg-cta.fx .btn { color: var(--mt4-deep); }
+.tg-cta.cr, .tg-cta.vip { background: linear-gradient(120deg, #053D29, #03A66D 65%, #12D98B); }
+.tg-cta.cr .btn, .tg-cta.vip .btn { color: #036B47; }
+.tg-cta.cr .tg-ic { color: var(--bnb-deep); }
+.tg-cta.dual { background: linear-gradient(120deg, #072A6B, #0A47C2 45%, #03A66D 75%, #12D98B); }
+.tg-cta-btns { display: flex; flex-direction: column; gap: 8px; }
+.tg-cta.dual .btn.fx { color: var(--mt4-deep); }
+.tg-cta.dual .btn.cr { color: #036B47; animation-delay: 3.5s; }
+/* robot pages: MT4 blue (forex) or Binance green (crypto) instead of gold */
+.robot-page.acc-fx { --acc: var(--mt4); --acc-deep: var(--mt4-deep); --acc-soft: rgba(30,107,255,.45); }
+.robot-page.acc-cr { --acc: var(--bnb-green); --acc-deep: var(--bnb-deep); --acc-soft: rgba(14,203,129,.45); }
+.robot-page .rb-buy { background: linear-gradient(135deg, var(--acc), var(--acc-deep)); color: #fff !important; box-shadow: 0 12px 30px var(--acc-soft); }
+.robot-page .rb-buy::after { border-color: var(--acc); }
+.robot-page.acc-cr .rb-tg { background: linear-gradient(135deg, #12D98B, var(--bnb-deep)); box-shadow: 0 12px 30px rgba(14,203,129,.35); }
+.robot-page.acc-cr .rb-tg .tg-ic { color: var(--bnb-deep); }
+.robot-page.acc-fx .rb-tg { background: linear-gradient(135deg, #2AABEE, #1479C2); }
+.robot-page .rb-stats b, .robot-page .rb-table:not(.risk) td { color: var(--acc); }
+.robot-page .rb-card:hover, .robot-page .rb-side { border-color: var(--acc); }
+.robot-page .rb-side .btn, .robot-page .rb-card .btn { background: linear-gradient(135deg, var(--acc), var(--acc-deep)); color: #fff; border: 0; }
+.robot-page .tag.gold { background: rgba(30,107,255,.14); color: #7FB0FF; border-color: rgba(30,107,255,.4); }
+.robot-page.acc-cr .tag.gold { background: rgba(14,203,129,.14); color: #3FE3A4; border-color: rgba(14,203,129,.4); }
+.robot-page .rb-week { background: var(--acc); color: #fff; }
+.rb-card.rb-crypto:hover { border-color: var(--bnb-green); }
+@media (prefers-reduced-motion: reduce) { .fab-support.fx, .fab-support.cr { animation: none; } }
+@media (max-width: 640px) {
+  .tg-dock.k-home .tg-join .t, .tg-dock.k-both .tg-join .t, .tg-dock.k-forex .tg-join .t, .tg-dock.k-crypto .tg-join .t { display: none; }
+  .tg-join .s { display: inline; }
+  .tg-dock .tg-join { height: 46px; font-size: 14px; padding: 0 14px 0 5px; }
+  .tg-dock .tg-join .tg-ic { width: 36px; height: 36px; }
+}

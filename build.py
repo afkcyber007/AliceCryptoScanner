@@ -318,10 +318,74 @@ def asset_version() -> str:
     return h.hexdigest()[:10]
 
 
+
+# --------------------------------------------------------------------------- Telegram dock (left) + support button (right)
+# fx = MT4 blue (forex), cr = Binance green (crypto). Which links show depends on the page.
+TG_LINKS = {
+    "fx_group": ("forex_channel", "Join Forex Signals Group", "Forex Signals", "Free forex & gold signals every day", "fx", "💹"),
+    "fx_robot": ("robot_channel", "Automatic Trading Robot Forex", "Forex Robot", "Live results every week", "fx2", "🤖"),
+    "fx_vip": ("forex_support", "Forex VIP Signals & Buy Robot", "Forex VIP", "Forex support on Telegram", "fx", "👑"),
+    "cr_group": ("crypto_channel", "Join Crypto Free Signals Group", "Crypto Signals", "Free Bitcoin & altcoin signals every day", "cr", "₿"),
+    "cr_vip": ("crypto_support", "Crypto VIP Signals & Support", "Crypto VIP", "Crypto support on Telegram", "cr2", "👑"),
+}
+DOCK_SETS = {  # main (big, pulsing) button first, then the smaller ones; right-hand button
+    "forex": (["fx_group", "fx_robot", "fx_vip"], ("fx_vip", "Buy the robot")),
+    "crypto": (["cr_group", "cr_vip"], ("cr_vip", "Crypto VIP")),
+    "home": (["fx_vip", "cr_vip"], ("", "Support")),          # main page: support links only
+    "both": (["fx_group", "cr_group"], ("", "Support")),
+}
+CRYPTO_WORDS = re.compile(r"crypto|bitcoin|btc|ethereum|altcoin|binance|bybit|funding|liquidation|whale|defi|memecoin|token")
+FOREX_WORDS = re.compile(r"forex|gold|xau|pip|lot-size|currency|fx-|eurusd|mt4|mt5|ea\b|robot|broker|vps|dxy|session")
+
+
+def dock_kind(path: str) -> str:
+    p = path.strip("/")
+    if p in ("", "index.html") or p in {c for c, _n in SITE_LANGS}:
+        return "home"
+    if p.startswith("trading-robots/crypto"):
+        return "crypto"
+    if p.startswith("trading-robots"):
+        return "forex"
+    if CRYPTO_WORDS.search(p):
+        return "crypto"
+    if FOREX_WORDS.search(p):
+        return "forex"
+    return "both"
+
+
+def tg_dock(kind: str) -> str:
+    items, (fab_key, fab_label) = DOCK_SETS.get(kind, DOCK_SETS["both"])
+    links = [(k, TG_LINKS[k]) for k in items if SITE.get(TG_LINKS[k][0])]
+    if not links:
+        return ""
+    big = 2 if kind in ("home", "both") else 1       # home / mixed pages: two equal buttons (forex + crypto)
+    html = []
+    for i, (k, (key, label, short, sub, color, emo)) in enumerate(links):
+        href = esc(SITE[key])
+        if i < big:
+            html.append(f'<a class="tg-join {color}" href="{href}" target="_blank" rel="noopener"><span class="tg-ic">{ICONS["tgfill"]}</span>'
+                        f'<span class="t">[[{label}]]<small>[[{sub}]]</small></span><span class="s">[[{short}]]</span></a>')
+        else:
+            html.append(f'<a class="tg-pill {color}" href="{href}" target="_blank" rel="noopener"><span class="tg-ic">{emo}</span><span class="t">[[{label}]]</span></a>')
+    main, more = html[:big], html[big:]
+    dock = (f'<div class="tg-dock k-{kind}" id="tg-dock">' + "".join(main)
+            + (f'<div class="tg-more">{"".join(more)}</div>' if more else "")
+            + '<button class="tg-dock-x" type="button" data-dock-min aria-label="[[Make smaller]]">×</button></div>')
+    if fab_key and SITE.get(TG_LINKS[fab_key][0]):
+        color = TG_LINKS[fab_key][4][:2]
+        fab_href, cls = esc(SITE[TG_LINKS[fab_key][0]]), f"fab-support {color}"
+    else:
+        fab_href, cls = esc(SITE.get("telegram_support", "")), "fab-support"
+    fab = (f'<a class="{cls}" href="{fab_href}" target="_blank" rel="noopener" aria-label="[[{fab_label}]]" title="[[{fab_label}]]">'
+           f'<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true"><path d="M9.8 15.4 9.6 19c.4 0 .6-.2.8-.4l1.9-1.8 4 2.9c.7.4 1.3.2 1.5-.7l2.7-12.6c.3-1.1-.4-1.6-1.1-1.3L3.6 10.9c-1.1.4-1.1 1-.2 1.3l4 1.2 9.3-5.9c.4-.3.8-.1.5.2"/></svg>'
+           f'<span>[[{fab_label}]]</span></a>') if fab_href else ""
+    return dock + fab
+
+
 def write_page(path: str, *, title: str, description: str, body: str, nav: str = "", jsonld: str = "",
                extra_js: str = "", extra_css: str = "", og_type: str = "website", robots: str = "index,follow",
                og_title: str = "", body_class: str = "", sitemap: tuple[str, str] | None = ("0.6", ""),
-               ad_bottom: bool = True, lang: str = "en", alternates: str = "", og_image: str = "") -> None:
+               ad_bottom: bool = True, lang: str = "en", alternates: str = "", og_image: str = "", dock: str = "") -> None:
     ver = []
     if SITE.get("google_site_verification"):
         ver.append(f'<meta name="google-site-verification" content="{esc(SITE["google_site_verification"])}">')
@@ -344,11 +408,13 @@ def write_page(path: str, *, title: str, description: str, body: str, nav: str =
         "join": esc(SITE.get("telegram_join", "")), "bot": esc(SITE.get("telegram_bot", "")),
         "fx_room": esc(SITE.get("forex_channel", "")), "crypto_ch": esc(SITE.get("crypto_channel", "")),
         "robot_ch": esc(SITE.get("robot_channel", "")), "robot_buy": esc(SITE.get("robot_admin", "")),
+        "fx_support": esc(SITE.get("forex_support", "")), "cr_support": esc(SITE.get("crypto_support", "")),
         "lang_font": (f'<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family={LANG_FONTS[lang]}&display=swap">'
                       if lang in LANG_FONTS else ""),
         "lang_menu": "".join(f'<a href="{BASE}{lang_home(c)}" hreflang="{c}" lang="{c}"{" aria-current=\"true\"" if c == lang else ""}>{n}</a>'
                              for c, n in SITE_LANGS),
         "lang_code": lang.upper(),
+        "dock": tg_dock(dock or dock_kind(path)),
     }
     for key in ("scanner", "tools", "learn", "news", "robots", "pricing", "download"):
         ctx[f"nav_{key}"] = ' aria-current="page"' if nav == key else ""
@@ -670,7 +736,7 @@ def build_articles(arts: list[dict]) -> None:
             parts.insert(at, tool_cta(a.get("cta") or a["category"]))
             body = "".join(parts)
         if "tg-cta" not in body:
-            body += tg_cta("forex" if a["category"] in ("forex", "gold") else "join")
+            body += tg_cta("forex" if a["category"] in ("forex", "gold") else "crypto" if a["category"] == "crypto" else "join")
         if a["faq"]:
             body += f'<h2 id="faq">Frequently asked questions</h2>{faq_html(a["faq"])}'
             toc.append(("faq", "Frequently asked questions"))
@@ -704,7 +770,7 @@ def build_articles(arts: list[dict]) -> None:
     <aside>
       <nav class="toc" aria-label="In this guide"><b>In this guide</b><ol>{toc_items}</ol></nav>
       <div class="side-card"><b>Scan the market with Alice</b><p>Every crypto, forex and gold market scored from 0 to 100, live.</p><a class="btn btn-gold btn-sm" href="{BASE}app/">Open the web app</a></div>
-      {tg_side()}
+      {tg_side({"crypto": "crypto", "forex": "forex", "gold": "forex"}.get(a["category"], "both"))}
       {ad("slot-sidebar", "ad-side")}
     </aside>
   </div>
@@ -717,6 +783,7 @@ def build_articles(arts: list[dict]) -> None:
                   "publisher": {"@id": url("#org")}, "articleSection": cat_name, "keywords": a["keywords"]}
         write_page(f"learn/{a['slug']}/", title=a["title"] + (" | Alice Forex/Crypto Scanner" if len(a["title"]) <= 36 else ""), og_title=a["title"],
                    description=a["description"], body=page, nav="learn", og_type="article", og_image=cover_path(a),
+                   dock={"crypto": "crypto", "forex": "forex", "gold": "forex"}.get(a["category"], ""),
                    jsonld=ld(ORG, art_ld, crumbs_ld(crumbs), faq_ld(a["faq"]) if a["faq"] else {}),
                    sitemap=("0.8", a["updated"]))
 
@@ -1015,13 +1082,13 @@ def build_news() -> None:
                extra_js=f'<script src="{BASE}assets/js/news.js?v={VERSION}" defer></script>')
 
 
-def tg_side() -> str:
-    """Telegram buttons in the article sidebar."""
-    items = [("telegram_join", "Join our Telegram Channel", "tg-s-join"), ("forex_channel", "Join Our Forex Signals Room", "tg-s-fx"),
-             ("crypto_channel", "Join our Crypto Channel", "tg-s-join"),
-             ("robot_channel", "Forex/Gold Trading Robot", "tg-s-robot"), ("robot_admin", "Buy the trading robot", "tg-s-vip"),
-             ("vip_support", "VIP trades on Telegram", "tg-s-vip"),
-             ("telegram_bot", "AliceCryptoScanner Bot", "tg-s-bot")]
+def tg_side(kind: str = "both") -> str:
+    """Telegram buttons in the article sidebar: forex links on forex pages, crypto links on crypto pages."""
+    fx = [("forex_channel", "Forex Signals Group", "fx"), ("robot_channel", "Automatic Trading Robot Forex", "fx"),
+          ("forex_support", "Forex VIP & Buy Robot", "fx")]
+    cr = [("crypto_channel", "Crypto Free Signals Group", "cr"), ("crypto_support", "Crypto VIP & Support", "cr")]
+    items = fx if kind == "forex" else cr if kind == "crypto" else [fx[0], cr[0], fx[2], cr[1]]
+    items = items + [("telegram_bot", "AliceCryptoScanner Bot", "tg-s-bot")]
     links = "".join(f'<a class="tg-s {c}" href="{esc(SITE.get(k, ""))}" target="_blank" rel="noopener">{ICONS["tgfill"]}<span>{esc(t)}</span></a>'
                     for k, t, c in items if SITE.get(k))
     return f'<div class="side-card tg-side"><b>Join us on Telegram</b>{links}</div>' if links else ""
@@ -1031,14 +1098,22 @@ def tg_cta(kind: str) -> str:
     """Big Telegram buttons used in articles and pages: join (main channel), forex, robot, vip."""
     TG = ICONS["tgfill"]
     data = {
-        "join": ("", SITE.get("telegram_join", ""), "Join our Telegram Channel", "Free daily analysis, key levels and market updates from the Alice team.", "Join now"),
-        "forex": ("", SITE.get("forex_channel", ""), "Join Our Forex Signals Room", "Daily forex and gold (XAU/USD) signals with entry, stop loss and targets, plus market news.", "Join the signals room"),
-        "crypto": ("", SITE.get("crypto_channel", ""), "Join our Crypto Channel", "Bitcoin and altcoin setups, whale moves and crypto market updates every day.", "Join the crypto channel"),
-        "robot": ("robot", SITE.get("robot_channel", ""), "Automatic Forex/Gold Trading Robot (MT4/MT5 EA)", "See our automatic trading robots, their weekly live results and how to run them on your own account.", "See the trading robot"),
-        "buy": ("robot", SITE.get("robot_admin", ""), "Buy the Alice trading robot", "Message our team on Telegram for the price, setup help and a VPS guide.", "Buy on Telegram"),
-        "vip": ("vip", SITE.get("vip_support", ""), "Want VIP trades on Telegram?", "Get entries and exits on Telegram and join the VIP discussion room. Message our support team to join.", "Join VIP on Telegram"),
+        "forex": ("fx", SITE.get("forex_channel", ""), "Join our Forex Signals Group", "Free daily forex and gold (XAU/USD) signals with entry, stop loss and targets, plus market news.", "Join Forex Signals"),
+        "crypto": ("cr", SITE.get("crypto_channel", ""), "Join our Crypto Free Signals Group", "Free Bitcoin and altcoin signals, whale moves and crypto market updates every day.", "Join Crypto Signals"),
+        "robot": ("fx", SITE.get("robot_channel", ""), "Automatic Trading Robot Forex (MT4/MT5 EA)", "See our automatic trading robots, their weekly live results and how to run them on your own account.", "See the trading robot"),
+        "buy": ("fx", SITE.get("forex_support", ""), "Buy the Alice trading robot", "Message our forex team on Telegram for the price, setup help and a VPS guide.", "Buy on Telegram"),
+        "fxvip": ("fx", SITE.get("forex_support", ""), "Forex VIP signals on Telegram", "Get VIP forex and gold entries and exits, or buy the trading robot. Message our forex support team.", "Get Forex VIP"),
+        "vip": ("cr", SITE.get("crypto_support", ""), "Crypto VIP signals on Telegram", "Get VIP crypto entries and exits and join the VIP room. Message our crypto support team.", "Get Crypto VIP"),
         "bot": ("", SITE.get("telegram_bot", ""), "AliceCryptoScanner Bot", "Every Alice tool in one Telegram menu, plus high-impact market news as it happens.", "Open the bot"),
     }
+    if kind == "join":   # mixed pages: both free signal groups side by side
+        fx, cr = SITE.get("forex_channel", ""), SITE.get("crypto_channel", "")
+        if not (fx or cr):
+            return ""
+        return (f'<div class="tg-cta dual"><span class="tg-ic">{TG}</span><div><b>Join our free Telegram signals groups</b>'
+                f'<p>Daily forex, gold and crypto signals with entry, stop loss and targets.</p></div><div class="tg-cta-btns">'
+                + (f'<a class="btn fx" href="{esc(fx)}" target="_blank" rel="noopener">Forex Signals</a>' if fx else "")
+                + (f'<a class="btn cr" href="{esc(cr)}" target="_blank" rel="noopener">Crypto Signals</a>' if cr else "") + "</div></div>")
     cls, link, title, text, btn = data[kind]
     if not link:
         return ""
@@ -1239,14 +1314,18 @@ def robot_gallery(market: str, items: list[dict], review: bool = False) -> str:
     return f'<div class="rb-gallery" data-market="{market}" data-limit="{12 if review else 24}">{cards}{empty}</div>'
 
 
-def robot_buttons(big: bool = True) -> str:
-    ch, buy = esc(SITE.get("robot_channel", "")), esc(SITE.get("robot_admin", ""))
+def robot_buttons(big: bool = True, market: str = "") -> str:
+    crypto = market == "crypto"
+    ch = esc(SITE.get("crypto_channel" if crypto else "robot_channel", ""))
+    buy = esc(SITE.get("crypto_support" if crypto else "forex_support", ""))
     handle = ch.split("t.me/")[-1] if ch else ""
+    ch_title = "Join our Crypto Free Signals Group" if crypto else "Join our Automatic Trading Robot channel"
+    buy_sub = "Chat with our crypto team on Telegram" if crypto else "Chat with our forex team on Telegram"
     return (f'<div class="rb-actions{" big" if big else ""}">'
             + (f'<a class="rb-tg" href="{ch}" target="_blank" rel="noopener"><span class="tg-ic">{ICONS["tgfill"]}</span>'
-               f'<span><b>Join our Trading Robot channel</b><small>Live results every week · @{handle}</small></span></a>' if ch else "")
+               f'<span><b>{ch_title}</b><small>Live results every week · @{handle}</small></span></a>' if ch else "")
             + (f'<a class="rb-buy" href="{buy}" target="_blank" rel="noopener"><span class="rb-buy-ic">🛒</span>'
-               f'<span><b>Buy this robot</b><small>Chat with our team on Telegram</small></span></a>' if buy else "")
+               f'<span><b>Buy this robot</b><small>{buy_sub}</small></span></a>' if buy else "")
             + "</div>")
 
 
@@ -1264,10 +1343,10 @@ def build_robots(arts: list[dict]) -> None:
             for s, n, _m, e, t in ROBOTS if s != slug)
         live = robot_results_snapshot(market, 12)
         live_title = "This week's live results" if slug else "Latest live results from all robots"
-        buy = esc(SITE.get("robot_admin", ""))
-        page = f'''<div class="wrap robot-page">
+        buy = esc(SITE.get("crypto_support" if market == "crypto" else "forex_support", ""))
+        page = f'''<div class="wrap robot-page {"acc-cr" if market == "crypto" else "acc-fx"}">
   <header class="page-head rb-hero">{crumbs_html(crumbs)}<span class="tag gold">MT4 · MT5 expert advisor</span>
-    <h1>{esc(meta["h1"])}</h1><p class="lead">{esc(meta["intro"])}</p>{robot_buttons()}</header>
+    <h1>{esc(meta["h1"])}</h1><p class="lead">{esc(meta["intro"])}</p>{robot_buttons(True, market)}</header>
   {top}
   <section class="rb-live" aria-labelledby="live-h"><div class="rb-sec-head"><h2 id="live-h">{live_title}</h2>
     <span class="tag sky">Added automatically from our Telegram channel</span></div>{robot_gallery(market, live)}</section>
@@ -1276,7 +1355,7 @@ def build_robots(arts: list[dict]) -> None:
   {ad("slot-top")}
   <div class="layout">
     <article><div class="prose">{shortcodes(body_html)}</div>
-      {robot_buttons(False)}
+      {robot_buttons(False, market)}
       <h2 style="margin-top:48px">Frequently asked questions</h2>{faq_html(faq)}
       {f'<section class="related"><h2>Trading robot guides</h2><div class="post-list">{guides}</div></section>' if guides else ""}
       <p class="disclaimer">Backtests and past results do not guarantee future results. Trading forex, gold and crypto with leverage carries a high risk of losing money. Only trade with money you can afford to lose. Results depend on your broker, spread, lot size and VPS.</p>
@@ -1284,7 +1363,7 @@ def build_robots(arts: list[dict]) -> None:
     <aside><div class="side-card rb-side"><b>🤖 Get the robot</b><p>Price, files and personal setup help from our team on Telegram.</p>
         <a class="btn btn-gold btn-sm btn-block rb-pulse" href="{buy}" target="_blank" rel="noopener">Buy this robot</a></div>
       <div class="side-card"><b>{"Our robots" if not slug else "Other robots"}</b><div class="tool-list">{others}</div></div>
-      {tg_cta("forex")}{ad("slot-sidebar", "ad-side")}</aside>
+      {tg_cta("crypto" if market == "crypto" else "forex")}{ad("slot-sidebar", "ad-side")}</aside>
   </div>
 </div>'''
         path = f"trading-robots/{slug}/" if slug else "trading-robots/"

@@ -531,6 +531,6 @@ body.in-app .fab-support .fab-ic { display: grid; }
 .side-channel.fx, .side-channel.cr, .side-channel.rb { padding: 7px 12px; margin-bottom: 7px; }
 .side-channel.fx small, .side-channel.cr small, .side-channel.rb small { display: none; }
 .side-channel i { font-style: normal; font-size: 18px; justify-self: center; }
-.side-channel.fx { background: linear-gradient(120deg, #0E9F6E, #087A55); }
-.side-channel.cr { background: linear-gradient(120deg, #F7931A, #C26A06); }
-.side-channel.rb { background: linear-gradient(120deg, #7C5CFF, #4B34C9); }
+.side-channel.fx { background: linear-gradient(120deg, #2F7BFF, #0A47C2); }
+.side-channel.cr { background: linear-gradient(120deg, #12D98B, #03A66D); }
+.side-channel.rb { background: linear-gradient(120deg, #12305F, #1D4FA8); }
