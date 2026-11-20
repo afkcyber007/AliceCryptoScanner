@@ -15,11 +15,12 @@ export async function profile(ctx) {
     ${u ? html`<section class="panel" style="display:flex;gap:14px;align-items:center">
         <span style="width:56px;height:56px;border-radius:16px;background:var(--s3);display:grid;place-items:center;font:700 22px var(--display);color:var(--gold);flex:none">${(u.name || u.email || "?").trim()[0].toUpperCase()}</span>
         <span style="min-width:0;flex:1"><b style="display:block;font-size:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.name}</b><span class="note" style="display:block;overflow:hidden;text-overflow:ellipsis">${u.email}</span></span>
-        <span class="plan-badge ${p}">${planName(p)}</span></section>
+        <span class="plan-badge ${p}">${u.pro ? "💎 Elite Pro" : planName(p)}</span></section>
       <section class="panel"><div class="kv">
         <div><small>Plan</small><b>${planName(p)}${u.plan_period ? ", " + u.plan_period : ""}</b></div>
         <div><small>${p === "free" ? "Member since" : "Active until"}</small><b>${p === "free" ? date(u.created_at) : date(u.plan_expires_at)}</b></div>
         <div><small>Coins</small><b style="color:var(--gold)">${int(u.coins || 0)}</b></div>
+        ${u.pro ? html`<div><small>💎 Elite Pro until</small><b>${date(u.pro_until)}</b></div>` : ""}
       </div>${p !== "elite" ? html`<a class="btn btn-gold btn-block" style="margin-top:12px" href="#/upgrade${p === "premium" ? "?plan=elite" : ""}">${p === "free" ? "Upgrade to Premium or Elite" : "Upgrade to Elite"}</a>` : ""}
       ${p !== "free" && toMs(u.plan_expires_at) - Date.now() < 7 * 864e5 ? html`<p class="warn small" style="margin:10px 0 0">Your plan ends in ${Math.max(0, Math.ceil((toMs(u.plan_expires_at) - Date.now()) / 864e5))} days. <a href="#/upgrade?plan=${p}">Renew now</a></p>` : ""}</section>`
     : html`<section class="panel center"><h2 style="font-size:20px;margin:0 0 6px">You're using Alice as a guest</h2><p class="note">Create a free account to save alerts, join the rooms, collect coins and use the same account on Android and iPhone.</p>
@@ -28,6 +29,8 @@ export async function profile(ctx) {
       ${row("#/edit-profile", "👤", "Edit profile")}
       ${row("#/rewards", "🪙", "Rewards and referral", html`<span class="note" style="margin-right:6px">${int(u.coins || 0)}</span>`)}
       ${row("#/payments", "🧾", "My payments")}
+      ${row("#/elite-pro", "💎", u.pro ? "Elite Pro · Telegram alerts" : "Elite Pro · VIP signals in Telegram", html`<span class="tag ${u.pro ? "bull" : "gold"}" style="margin-right:6px">${u.pro ? "Active" : "New"}</span>`)}
+      ${row("#/telegram", "📲", "Connect Telegram")}
       ${row("#/alerts", "🔔", "Alerts")}
       ${row("#/password", "🔑", "Change password")}
     </div></section>` : ""}

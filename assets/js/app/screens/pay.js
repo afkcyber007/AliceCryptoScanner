@@ -1,6 +1,6 @@
 /* Plans and crypto payment (USDT TRC20/BEP20 or BTC). The admin team verifies each payment in Telegram. */
 import { A, html, raw, api, session, plan, go, qs, num, skeleton, errorBox, toast, copy, icon, loadConfig, toMs, featList } from "../core.js";
-import { offerBox, tickOffers } from "../components.js";
+import { offerBox, tickOffers, eliteProCard } from "../components.js";
 
 function offerPrice(cfg, pid, period) {
   const o = cfg.offer;
@@ -10,7 +10,7 @@ function offerPrice(cfg, pid, period) {
 }
 
 export async function upgrade(ctx) {
-  ctx.top({ title: "Upgrade", sub: "Premium and Elite" });
+  ctx.top({ title: "Upgrade", sub: "Premium, Elite and Elite Pro" });
   const cfg = (await loadConfig()) || {};
   const plans = cfg.plans && cfg.plans.length ? cfg.plans : [
     { id: "premium", label: "Premium", monthly: 10, yearly: 70, features: [] }, { id: "elite", label: "Elite", monthly: 15, yearly: 90, features: [] }];
@@ -33,6 +33,7 @@ export async function upgrade(ctx) {
       ${cur === "elite" ? html`<div class="panel center"><b>You're on Elite</b><p class="note" style="margin:4px 0 0">Buying again extends your plan.</p></div>` : ""}
       <a class="btn btn-gold btn-block" href="${session.loggedIn ? "#/pay/" + pid + "/" + period : "#/signup?next=" + encodeURIComponent("/pay/" + pid + "/" + period)}">Pay $${num(price(period))} with crypto</a>
       <p class="note center" style="margin:8px 0 0">USDT (TRC20 or BEP20) or Bitcoin. Activated by our team after checking the payment, usually within a few hours.</p>
+      ${eliteProCard(cfg)}
       <div class="grid-2">
         <a class="banner upgrade" href="#/rewards"><span class="emo">🪙</span><span><b>Or earn it with coins</b><span class="muted">Spin daily and invite friends. 5,000 coins = 1 month Premium.</span></span>${icon.chev}</a>
         <a class="banner upgrade" href="#/exchanges"><span class="emo">🎁</span><span><b>Free with a partner exchange</b><span class="muted">Trade on one of our partner exchanges and get Premium or Elite free.</span></span>${icon.chev}</a>
@@ -127,4 +128,28 @@ export async function pay(ctx) {
   });
   ctx.cleanup(() => { if (preview) URL.revokeObjectURL(preview); });
   await loadQuote();
+}
+
+/* 💎 Elite Pro page and "Connect Telegram" (opened from the bot's "Connect my Alice account" button). */
+export async function elitePro(ctx) {
+  ctx.top({ title: "Elite Pro", sub: "Elite + VIP signals in Telegram" });
+  const cfg = (await loadConfig()) || {};
+  ctx.render(html`${eliteProCard(cfg)}
+    <section class="panel"><div class="panel-head"><h2>How it works</h2></div>
+      <ol class="prose-sm" style="margin:0;padding-left:20px;line-height:1.7">
+        <li>Tap <b>Get Elite Pro in Telegram</b>. Our bot opens and connects your Alice account.</li>
+        <li>Choose 1 month or 1 year and pay with USDT (TRC20 / BEP20) or Bitcoin.</li>
+        <li>Send the screenshot and TxID in the bot. Our team checks it, usually within a few hours.</li>
+        <li>Choose your rooms: Forex & Gold, Crypto Scalping, Crypto Futures. Every signal and target hit arrives in Telegram.</li>
+      </ol></section>
+    <a class="banner upgrade" href="#/vip"><span class="emo">👑</span><span><b>See the VIP rooms and their results</b><span class="muted">Every target hit counts: TP1, TP2, TP3…</span></span>${icon.chev}</a>`);
+}
+export async function telegram(ctx) {
+  ctx.top({ title: "Connect Telegram", sub: "Elite Pro alerts and account messages" });
+  if (!session.loggedIn) { go("/login?next=" + encodeURIComponent("/telegram")); return; }
+  const cfg = (await loadConfig()) || {};
+  ctx.render(html`<section class="panel center"><div style="font-size:42px">📲</div><h2>Connect your Alice account to Telegram</h2>
+    <p class="muted">Tap the button: our Telegram bot opens and links this account (${session.user.email}). Elite Pro then works in the app, the website and Telegram.</p>
+    <button type="button" class="btn btn-tgblue btn-block" data-elitepro="link">${icon.telegram} Connect Telegram now</button></section>
+    ${eliteProCard(cfg, { compact: true })}`);
 }

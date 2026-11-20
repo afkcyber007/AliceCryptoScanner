@@ -32,7 +32,7 @@ We post the gold robot's trades in our Telegram channel, and the newest screensh
 
 ## How to start with the gold EA
 
-1. **Join the robot channel** on Telegram and look at the weekly gold results.
+1. **Join the robot channel** on Telegram and look at the daily gold results.
 2. **Message our team** with the "Buy this robot" button and tell us your balance and broker.
 3. **Install the EA** on MT4 or MT5 with our guide. We help you with the settings.
 4. **Run it on a Windows VPS** so it trades every London and New York session.

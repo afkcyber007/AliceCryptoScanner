@@ -36,7 +36,17 @@ A separate engine looks for quick **gold scalps** only in a moving market: the 5
 
 Learn more: [how to trade gold](site:learn/how-to-trade-gold-xauusd/), [what moves the gold price](site:learn/what-moves-the-gold-price/) and our [forex trading robot](site:trading-robots/forex-ea/).
 
+## Get every signal in Telegram: Elite Pro
+
+With **Elite Pro** (35 USDT a month or 250 USDT a year) every new signal from this room and every target hit (TP1, TP2, TP3…) is sent straight to your Telegram the second it is published. You choose the rooms in our bot and can switch the alerts on or off at any time. Your Alice account gets Elite in the app and on the website too.
+
+[[tg:pro]]
+
 ## Frequently asked questions
+
+### How are wins counted?
+
+Every signal that reaches TP1, TP2, TP3 or a further target counts as a win, also while it is still running. A loss is a signal stopped out before any target. Signals that expire without a target or a stop are left out of the win rate.
 
 ### How many forex signals do I get a day?
 Usually 5 to 7 swing signals a day between 07:00 and 20:00 GMT, Monday to Friday, plus up to four gold scalps per session when gold is moving.

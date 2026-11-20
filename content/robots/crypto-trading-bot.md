@@ -24,7 +24,7 @@ There are two kinds of crypto trading bots. **Exchange bots** (grid and DCA bots
 
 ## How to start with the crypto robot
 
-1. **Join the robot channel** on Telegram and look at the weekly results.
+1. **Join the robot channel** on Telegram and look at the daily results and client reviews.
 2. **Message our team** with the "Buy this robot" button. Ask which crypto pairs and brokers are supported for your country.
 3. **Install the EA** on MetaTrader 5 with our guide.
 4. **Run it on a VPS** so it trades every hour of every day.

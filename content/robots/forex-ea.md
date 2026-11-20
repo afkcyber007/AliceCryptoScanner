@@ -1,9 +1,9 @@
 ---
-title: Forex Automatic Trading Robot / EA (MT4/MT5) + Backtest
-description: Alice forex automatic trading robot (EA) for MT4 and MT5. EUR/USD backtest: 645 trades, 98.14% winning trades, profit factor 19.33. Weekly live results and setup help.
+title: Forex Trading Robot / EA (MT4/MT5): Daily Results, Reviews & Backtest
+description: Alice forex automatic trading robot (EA) for MT4 and MT5. EUR/USD backtest: 645 trades, 98.14% winning trades, profit factor 19.33. Daily live results, client reviews and setup help.
 h1: Forex Automatic Trading Robot / EA
-intro: A forex expert advisor for MetaTrader 4 and 5 that trades EUR/USD for you around the clock. See the full backtest, the weekly live results and how to start.
-keywords: forex automatic trading robot, forex ea, forex robot mt4, forex robot mt5, best forex ea, eurusd ea, automated forex trading, expert advisor
+intro: A forex expert advisor for MetaTrader 4 and 5 that trades EUR/USD for you around the clock. See the daily live results, client reviews, the full backtest and how to start.
+keywords: forex automatic trading robot, forex ea results, forex robot daily results, forex ea reviews, forex ea, forex robot mt4, forex robot mt5, best forex ea, eurusd ea, automated forex trading, expert advisor
 market: forex
 ---
 ## What the Alice forex EA does
@@ -36,7 +36,7 @@ A strong backtest is a good start, but every robot has risk, and we prefer to sh
 
 ## How to start with the forex EA
 
-1. **Join the robot channel** and look at the latest weekly results.
+1. **Join the robot channel** and look at the daily results on this page and in the channel.
 2. **Message our team** with the "Buy this robot" button. Tell us your balance and broker.
 3. **Install the EA** on MT4 or MT5 with our step-by-step guide.
 4. **Run it on a Windows VPS** close to your broker's server, so it trades 24/5 with fast execution.

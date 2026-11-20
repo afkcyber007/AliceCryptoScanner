@@ -1,5 +1,9 @@
 /* VIP Signal Rooms: Forex & Gold room, Crypto room (Scalping + Futures). Elite + the 10-day free trial. */
-import { html, raw, api, session, toast, copy, skeleton, errorBox, ago, icon, featList } from "../core.js";
+import { html, raw, api, session, toast, copy, skeleton, errorBox, ago, icon, featList, loadConfig } from "../core.js";
+import { proInfo } from "../components.js";
+
+let cfgCache = {};
+loadConfig().then((c) => { cfgCache = c || {}; }).catch(() => {});
 import * as push from "../push.js";
 
 const ROOM_OF = { forex: "forex", crypto_scalp: "crypto", crypto_futures: "crypto" };
@@ -10,8 +14,10 @@ const PERKS = ["Forex & Gold VIP: 5–7 entries a day + gold scalps in London an
   "Every result tracked on real candles: TP hits and stops"];
 
 const resultTag = (it) => {
-  if (it.status === "active") return html`<span class="tag sky">● Live${it.hits.length ? " · TP" + Math.max(...it.hits) + " hit" : ""}</span>`;
-  if (/^TP/.test(it.result)) return html`<span class="tag bull">✅ ${it.result} +${it.result_value}${it.unit === "pips" ? " pips" : "%"}</span>`;
+  const u = it.unit === "pips" ? " pips" : "%";
+  if (it.status === "active") return it.hits.length ? html`<span class="tag bull">✅ TP${Math.max(...it.hits)} hit · WIN</span><span class="tag sky">● Live</span>` : html`<span class="tag sky">● Live</span>`;
+  if (/^TP/.test(it.result)) return html`<span class="tag bull">✅ ${it.result} hit · WIN +${it.result_value}${u}</span>`;
+  if (it.result === "BE" && it.hits.length) return html`<span class="tag bull">✅ TP${Math.max(...it.hits)} hit · WIN</span>`;
   if (it.result === "BE") return html`<span class="tag">⚖️ Break-even</span>`;
   if (it.result === "SL") return html`<span class="tag bear">❌ Stop -${Math.abs(it.result_value)}${it.unit === "pips" ? " pips" : "%"}</span>`;
   return html`<span class="tag">Closed</span>`;
@@ -62,20 +68,22 @@ export default async function vip(ctx) {
         <p class="muted" style="margin:0 0 12px">${f.desc}</p>
         <div class="vip-stats">
           <div><b>${s.win_rate == null ? "–" : s.win_rate + "%"}</b><span>win rate (30 days)</span></div>
-          <div><b>${s.closed}</b><span>closed signals</span></div>
+          <div><b>${s.wins} / ${s.losses}</b><span>wins / losses</span></div>
           <div><b>${s.all_targets}</b><span>hit every target</span></div>
           <div><b>${s.active}</b><span>live now</span></div></div>
+        ${s.tp_hits ? html`<div class="vip-tps">${Object.entries(s.tp_hits).map(([k, v]) => html`<span><b>${v}</b> ${k} ✅</span>`)}<span class="note">targets hit · every TP counts as a win</span></div>` : ""}
         ${data.state === "trial" && data.plan !== "elite" ? html`<p class="note" style="margin:10px 0 0">🎁 Included in your 10-day free trial. Keep the rooms with <a href="#/upgrade?plan=elite">Elite, 15 USDT a month</a>.</p>` : ""}
       </section>
+      ${session.user && session.user.pro ? html`<a class="banner pro-banner" href="#/elite-pro"><span class="emo">💎</span><span><b>Elite Pro is active</b><span class="muted">These signals also arrive in your Telegram. Tap to manage your rooms.</span></span>${icon.chev}</a>`
+        : html`<button type="button" class="banner pro-banner" data-elitepro><span class="emo">💎</span><span><b>Get these signals in Telegram — Elite Pro</b><span class="muted">Every entry and every target hit, instantly. ${proInfo(cfgCache).monthly} USDT a month.</span></span>${icon.chev}</button>`}
       ${!data.access ? html`<div class="gate"><div class="emo">👑</div><h2>VIP Signal Rooms are an Elite feature</h2>
         <p>See every entry, target and stop the moment it's published, with instant alerts. The results below are real and tracked automatically.</p>${featList(PERKS)}
         <div class="btn-row" style="justify-content:center"><a class="btn btn-gold" href="#/upgrade?plan=elite">Get Elite · 15 USDT a month</a></div>
         <p class="note">Or 90 USDT a year (save 50%).</p></div>` : ""}
       <h3 class="vip-h">● Live signals <span class="note">${active.length}</span></h3>
       ${active.length ? html`<div class="grid-2">${active.map(card)}</div>` : html`<div class="panel"><div class="empty"><b>Waiting for the best entries</b>The engine only publishes when every filter agrees. Turn on alerts and you'll know the moment a signal is posted.</div></div>`}
-      ${(data.recent_wins || []).length ? html`<h3 class="vip-h">🏆 Latest targets hit</h3><div class="vip-wins">${data.recent_wins.map((w) => html`<span><b>${w.display}</b> ${w.side} ${w.result} <em>+${w.gain}${w.unit === "pips" ? " pips" : "%"}</em></span>`)}</div>` : ""}
-      ${closed.length ? html`<h3 class="vip-h">Closed (last 14 days)</h3><div class="grid-2">${closed.slice(0, 20).map(card)}</div>` : ""}
-      <p class="note">Signals are generated automatically from market data and are not financial advice. Trading with leverage can lose more than you expect — always use the stop loss and risk only what you can afford.</p>`}`);
+      ${(data.recent_wins || []).length ? html`<h3 class="vip-h">🏆 Latest targets hit</h3><div class="vip-wins">${data.recent_wins.map((w) => html`<span><b>${w.display}</b> ${w.side} ✅ ${w.result} hit${w.running ? " · live" : ""} <em>+${w.gain}${w.unit === "pips" ? " pips" : "%"}</em></span>`)}</div>` : ""}
+      ${closed.length ? html`<h3 class="vip-h">Closed (last 14 days)</h3><div class="grid-2">${closed.slice(0, 20).map(card)}</div>` : ""}`}`);
   };
 
   const load = async () => {

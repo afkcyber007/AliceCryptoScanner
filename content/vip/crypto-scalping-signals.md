@@ -28,7 +28,17 @@ Learn more: [crypto futures for beginners](site:learn/crypto-futures-trading-for
 
 [[tg:crypto]]
 
+## Get every signal in Telegram: Elite Pro
+
+With **Elite Pro** (35 USDT a month or 250 USDT a year) every new signal from this room and every target hit (TP1, TP2, TP3…) is sent straight to your Telegram the second it is published. You choose the rooms in our bot and can switch the alerts on or off at any time. Your Alice account gets Elite in the app and on the website too.
+
+[[tg:pro]]
+
 ## Frequently asked questions
+
+### How are wins counted?
+
+Every signal that reaches TP1, TP2, TP3 or a further target counts as a win, also while it is still running. A loss is a signal stopped out before any target. Signals that expire without a target or a stop are left out of the win rate.
 
 ### How many crypto scalping signals are posted?
 Up to 14 a day, at least 20 minutes apart, with no more than 6 open at once.

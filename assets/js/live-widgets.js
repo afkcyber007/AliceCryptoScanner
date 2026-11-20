@@ -60,12 +60,12 @@
         var s = f.stats || {};
         var set = function (k, v) { var el = card.querySelector('[data-k="' + k + '"]'); if (el) el.textContent = v; };
         set("win_rate", s.win_rate == null ? "New" : s.win_rate + "%");
-        set("closed", s.closed);
+        set("wins_n", s.wins == null ? "–" : s.wins);
         set("all_targets", s.all_targets);
         var w = card.querySelector('[data-k="wins"]');
         if (w && (f.recent_wins || []).length) {
           w.innerHTML = f.recent_wins.slice(0, 4).map(function (x) {
-            return "<span>✅ <b>" + esc(x.display) + "</b> " + esc(x.side) + " " + esc(x.result) + " <em>+" + x.gain + (x.unit === "pips" ? " pips" : "%") + "</em></span>";
+            return "<span>✅ <b>" + esc(x.display) + "</b> " + esc(x.side) + " " + esc(x.result) + " hit <em>+" + x.gain + (x.unit === "pips" ? " pips" : "%") + "</em></span>";
           }).join("");
         }
       });

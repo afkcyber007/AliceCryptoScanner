@@ -47,6 +47,8 @@ route("/payments", S("profile"), { tab: "profile", fn: "payments", back: true, a
 route("/contact", S("profile"), { tab: "profile", fn: "contact", back: true });
 route("/install", S("profile"), { tab: "profile", fn: "install", back: true });
 route("/upgrade", S("pay"), { tab: "profile", fn: "upgrade", back: true });
+route("/telegram", S("pay"), { tab: "profile", fn: "telegram", back: true });
+route("/elite-pro", S("pay"), { tab: "profile", fn: "elitePro", back: true });
 route("/pay/:plan/:period", S("pay"), { tab: "profile", fn: "pay", back: true, auth: true });
 route("/notifications", S("notify"), { tab: "profile", back: true });
 route("/language", S("profile"), { tab: "profile", fn: "language", back: true });
@@ -137,7 +139,7 @@ async function render() {
   updateAd();
 }
 /* ------------------------------------------------------------------ 10-day free trial, then Premium or Elite */
-const OPEN_ROUTES = /^\/(upgrade|pay\/|payments|profile|edit-profile|password|delete|contact|install|notifications|language|login|signup|forgot|rewards|spin|exchanges)/;
+const OPEN_ROUTES = /^\/(upgrade|telegram|elite-pro|pay\/|payments|profile|edit-profile|password|delete|contact|install|notifications|language|login|signup|forgot|rewards|spin|exchanges)/;
 const TRIAL_DAYS = 10;
 function access() {
   const u = session.user;
@@ -159,12 +161,13 @@ function gateFor(path) {
     <p class="muted">Create a free account to use the scanner, alerts, news, calculators and the academy for ${TRIAL_DAYS} days. No payment needed.</p>
     <ul class="pw-list">${perks}</ul>
     <div class="btn-row" style="justify-content:center"><a class="btn btn-gold" href="#/signup">Start free trial</a><a class="btn btn-line" href="#/login">I have an account</a></div>
-    <p class="note">After the trial: Premium 10 USDT a month (70 a year) · Elite 15 USDT a month (90 a year).</p></div>`;
+    <p class="note">After the trial: Premium 10 USDT a month (70 a year) · Elite 15 USDT a month (90 a year) · Elite Pro 35 USDT a month (250 a year, in Telegram).</p></div>`;
   if (a === "expired") return `<div class="paywall"><div class="pw-emo">🔒</div><h1>Your free trial has ended</h1>
     <p class="muted">Choose a plan to unlock Alice again. Your account, watchlist and alerts are kept.</p>
-    <div class="pw-plans">
+    <div class="pw-plans three">
       <a class="pw-plan" href="#/upgrade?plan=premium"><b>⭐ Premium</b><span class="pw-price">10 USDT<small>/month</small></span><span class="pw-alt">or 70 USDT a year · save 42%</span><span class="btn btn-blue btn-sm">Get Premium</span></a>
       <a class="pw-plan best" href="#/upgrade?plan=elite"><em>Best value</em><b>👑 Elite</b><span class="pw-price">15 USDT<small>/month</small></span><span class="pw-alt">or 90 USDT a year · save 50%</span><span class="btn btn-gold btn-sm">Get Elite</span></a>
+      <a class="pw-plan pro" href="#/upgrade" data-elitepro><b>💎 Elite Pro</b><span class="pw-price">35 USDT<small>/month</small></span><span class="pw-alt">or 250 USDT a year · Elite + VIP signals in Telegram</span><span class="btn btn-tgblue btn-sm">Get it in Telegram</span></a>
     </div>
     <ul class="pw-list">${perks}</ul>
     <p class="note">Pay with USDT or Bitcoin on the website, or Google Play in the Android app. Or <a href="#/rewards">earn Premium with coins</a>.</p></div>`;

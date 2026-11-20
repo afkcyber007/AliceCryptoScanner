@@ -161,3 +161,73 @@ export function meterPanel(m, group = "crypto") {
     </div>
     <p class="note" style="margin:8px 0 0">${g.bullish} bullish · ${g.bearish} bearish of ${g.total} ${g.name.toLowerCase()} markets on the 1-hour chart.</p></section>`);
 }
+
+/** Analog + digital meter for the Gold / BTC deep analysis: a dial with ticks and a needle, and a digital
+ *  read-out (score, verdict, confidence) underneath — like an instrument panel. */
+export function dialMeter(score, { verdict = "", confidence = null, size = 300, title = "" } = {}) {
+  const v = Math.max(0, Math.min(100, Number(score) || 50));
+  const ang = -90 + v * 1.8;
+  const cx = 120, cy = 120, R = 96;
+  const pt = (deg, r) => [cx + r * Math.cos((deg - 180) * Math.PI / 180), cy + r * Math.sin((deg - 180) * Math.PI / 180)];
+  const arc = (a0, a1, c) => { const [x0, y0] = pt(a0, R), [x1, y1] = pt(a1, R); return `<path d="M${x0.toFixed(1)} ${y0.toFixed(1)} A${R} ${R} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}" stroke="${c}" stroke-width="14" fill="none"/>`; };
+  let ticks = "";
+  for (let i = 0; i <= 50; i++) {
+    const deg = i * 3.6, big = i % 5 === 0;
+    const [x0, y0] = pt(deg, R - 12), [x1, y1] = pt(deg, R - (big ? 24 : 17));
+    ticks += `<line x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}" stroke="currentColor" stroke-opacity="${big ? .8 : .35}" stroke-width="${big ? 2 : 1}"/>`;
+    if (i % 10 === 0) { const [tx, ty] = pt(deg, R - 36); ticks += `<text x="${tx.toFixed(1)}" y="${(ty + 3).toFixed(1)}" font-size="9" text-anchor="middle" fill="currentColor" fill-opacity=".7">${i * 2}</text>`; }
+  }
+  const cls = v >= 58 ? "up" : v <= 42 ? "down" : "mid";
+  const lbl = verdict || (v >= 70 ? "Strong bullish" : v >= 58 ? "Bullish" : v <= 30 ? "Strong bearish" : v <= 42 ? "Bearish" : "Neutral");
+  return raw(`<div class="dial" style="max-width:${size}px">
+    ${title ? `<div class="dial-t">${esc(title)}</div>` : ""}
+    <svg viewBox="0 0 240 140" role="img" aria-label="${esc(title || "Meter")}: ${Math.round(v)} of 100, ${esc(lbl)}">
+      <defs><radialGradient id="dialbg" cx="50%" cy="85%" r="75%"><stop offset="0" stop-color="currentColor" stop-opacity=".10"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></radialGradient></defs>
+      <path d="M14 120 A106 106 0 0 1 226 120 Z" fill="url(#dialbg)"/>
+      ${arc(0, 54, "#EA3943")}${arc(54.5, 75.6, "#F0766E")}${arc(76, 104, "#8A94A8")}${arc(104.4, 126, "#5BD49A")}${arc(126.5, 180, "#16C784")}
+      ${ticks}
+      <text x="22" y="136" font-size="9" fill="#EA3943">STRONG SELL</text><text x="218" y="136" font-size="9" fill="#16C784" text-anchor="end">STRONG BUY</text>
+      <g class="gauge-needle dial-needle" style="transform:rotate(${ang}deg)"><path d="M117 120 L120 34 L123 120 Z" fill="var(--gold, #F5B941)"/></g>
+      <circle cx="120" cy="120" r="10" fill="currentColor"/><circle cx="120" cy="120" r="4" fill="var(--gold, #F5B941)"/>
+    </svg>
+    <div class="dial-lcd ${cls}"><span class="seg">${String(Math.round(v)).padStart(3, "0")}</span><span class="lcd-r"><b>${esc(lbl.toUpperCase())}</b>${confidence != null ? `<small>CONFIDENCE ${Math.round(confidence)}%</small>` : ""}</span></div>
+  </div>`);
+}
+
+/* ------------------------------------------------------------------ 💎 Elite Pro (sold in the Telegram bot) */
+export const PRO_FEATURES = ["Everything in Elite: app, web app and website", "Every VIP signal sent to your Telegram the second it's published",
+  "Target-hit alerts: TP1, TP2, TP3… and 'move SL to entry'", "Choose your rooms: Forex & Gold, Crypto Scalping, Crypto Futures",
+  "Turn the Telegram alerts on or off whenever you like", "Priority support from the Alice team"];
+export function proInfo(cfg) {
+  const p = (cfg && cfg.elite_pro) || {};
+  return { monthly: p.monthly || 35, yearly: p.yearly || 250, save: p.yearly_save || 40, bot: p.bot_url || "https://t.me/AliceCryptoScanner_bot?start=elitepro", features: p.features || PRO_FEATURES };
+}
+/** Elite Pro price card. Its button opens the Telegram bot (and links the account when logged in). */
+export function eliteProCard(cfg, { compact = false } = {}) {
+  const p = proInfo(cfg);
+  const u = session.user || {};
+  return raw(`<section class="panel pro-card${compact ? " compact" : ""}">
+    <div class="pro-top"><span class="pro-emo">💎</span><div><h2>Elite Pro</h2><p class="muted">Elite + every VIP trade in your Telegram</p></div>
+      <span class="tag gold">${u.pro ? "Active" : "Telegram only"}</span></div>
+    <div class="pro-price"><b>${p.monthly} USDT</b><small>/month</small><span>or ${p.yearly} USDT a year · save ${p.save}%</span></div>
+    ${compact ? "" : `<ul class="pw-list">${p.features.map((x) => `<li>${icon.check || "✓"}<span>${esc(x)}</span></li>`).join("")}</ul>`}
+    <button type="button" class="btn btn-tgblue btn-block" data-elitepro>${icon.telegram} ${u.pro ? "Manage my Telegram alerts" : "Get Elite Pro in Telegram"}</button>
+    <p class="note center" style="margin:8px 0 0">Bought and managed in our Telegram bot. Pay with USDT or BTC — your Alice account gets Elite automatically.</p>
+  </section>`);
+}
+/** Opens the bot: logged in → a one-time link that also connects this account; otherwise the plain bot link. */
+export async function openElitePro(cfg, intent = "pro") {
+  const w = window.open("about:blank", "_blank");
+  let link = proInfo(cfg).bot;
+  if (session.loggedIn) {
+    try { link = (await api("/api/telegram/link?for=" + intent, { method: "POST" })).url || link; } catch { /* plain bot link */ }
+  }
+  if (w) w.location.href = link; else location.href = link;
+}
+document.addEventListener("click", async (e) => {
+  const b = e.target.closest && e.target.closest("[data-elitepro]");
+  if (!b) return;
+  e.preventDefault();
+  const { loadConfig } = await import("./core.js");
+  openElitePro(await loadConfig().catch(() => ({})), b.dataset.elitepro || "pro");
+});

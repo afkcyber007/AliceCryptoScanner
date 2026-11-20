@@ -1,6 +1,6 @@
 /* Gold and BTC deep analysis (Elite, 10-day free trial for every account). */
 import { html, api, session, num, pct, upDown, ago, dateTime, skeleton, errorBox, gate, needLogin, labelTag, toMs } from "../core.js";
-import { partsBars } from "../components.js";
+import { partsBars, dialMeter, gauge } from "../components.js";
 
 const PART = { technicals: "Technicals", intermarket: "Dollar, yields, stocks", history: "History", events: "Events", headlines: "Headlines", positioning: "Futures and whales" };
 
@@ -33,7 +33,9 @@ async function deep(ctx, asset) {
     <section class="verdict ${cls}">
       <div class="note">${name} verdict for today</div>
       <div class="v ${cls === "bull" ? "up" : cls === "bear" ? "down" : ""}">${r.verdict_label || r.verdict}</div>
+      ${dialMeter(r.score, { verdict: r.verdict_label || r.verdict, confidence: r.confidence, title: name + " meter" })}
       <div class="s">Score ${num(r.score, 0)} of 100, confidence ${num(r.confidence, 0)}%. Updated ${ago(r.updated_at)}.</div>
+      <div class="dial-parts">${Object.entries(r.parts || {}).map(([k, x]) => gauge(x, { size: 120, label: PART[k] || k }))}</div>
     </section>
     <div class="grid-2">
       <section class="panel"><div class="panel-head"><h2>What makes up the verdict</h2></div>${partsBars(r.parts || {}, PART)}</section>

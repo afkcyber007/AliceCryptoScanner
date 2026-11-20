@@ -2,6 +2,7 @@
    and a friendly request to turn on notifications. Each one is shown rarely and never twice for the same thing. */
 import { html, esc, api, session, plan, store, sheet, icon, toMs, parseHash } from "./core.js";
 import * as push from "./push.js";
+import { proInfo } from "./components.js";     // also registers the "Get Elite Pro in Telegram" buttons
 
 const DAY = 864e5;
 let open = false;
@@ -47,6 +48,22 @@ function expiry() {
   return !!s;
 }
 
+/** Once every 24 hours for Elite members: Elite Pro (every VIP trade in Telegram). */
+async function elitePro() {
+  const u = session.user;
+  if (!u || plan() !== "elite" || u.pro) return false;
+  if (Date.now() - store.get("proPopAt", 0) < DAY) return false;
+  if (/^\/(vip|elite-pro|telegram)/.test(parseHash().path)) return false;
+  const { loadConfig } = await import("./core.js");
+  const p = proInfo(await loadConfig().catch(() => ({})));
+  const s = show(`<div class="pop-center"><div class="pop-emo">💎</div><h2>New for Elite members: Elite Pro</h2>
+    <p class="muted">Get every VIP signal and every target hit (TP1, TP2, TP3…) straight to your Telegram the second it's published. Choose Forex & Gold, Crypto Scalping or Crypto Futures, and switch alerts on or off any time.</p>
+    <p><b>${p.monthly} USDT a month</b> · ${p.yearly} USDT a year (save ${p.save}%)</p>
+    <div class="btn-row" style="justify-content:center"><button type="button" class="btn btn-tgblue" data-elitepro>${icon.telegram} Get Elite Pro in Telegram</button><a class="btn btn-line" href="#/elite-pro">Learn more</a></div></div>`, "Elite Pro");
+  if (s) { store.set("proPopAt", Date.now()); s.el.querySelector("[data-elitepro]").addEventListener("click", () => setTimeout(() => s.close(), 50)); }
+  return !!s;
+}
+
 /** Every 12 hours: invite to the busy discussion room. */
 async function chatInvite() {
   if (Date.now() - store.get("chatInviteAt", 0) < 12 * 3600e3) return false;
@@ -89,6 +106,7 @@ export async function check() {
   if (document.hidden) return;
   if (expiry()) return;
   if (await announcement()) return;
+  if (await elitePro()) return;
   if (pushAsk()) return;
   if (session.loggedIn) await chatInvite();
 }

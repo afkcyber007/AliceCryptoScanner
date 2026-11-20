@@ -88,7 +88,10 @@ export class ApiError extends Error {
 export async function api(path, { method = "GET", body, form, auth = true, timeout = 25000 } = {}) {
   const headers = { Accept: "application/json" };
   const token = session.token;
-  if (auth && token) headers.Authorization = "Bearer " + token;
+  // Always send the session (except for the login/sign-up calls themselves) so the server never sees a
+  // logged-in visitor as a guest — that used to log people out after a few minutes.
+  const sent = !!(token && (auth || !path.startsWith("/api/auth/")));
+  if (sent) headers.Authorization = "Bearer " + token;
   let payload;
   if (form) payload = form;
   else if (body !== undefined) { headers["Content-Type"] = "application/json"; payload = JSON.stringify(body); }
@@ -105,7 +108,7 @@ export async function api(path, { method = "GET", body, form, auth = true, timeo
   if (!res.ok) {
     const msg = (data && data.error) || "Something went wrong (" + res.status + ")";
     const code = (data && data.code) || "http";
-    if (res.status === 401 && token && (code === "auth_expired" || code === "auth_required")) { session.clear(); emit("auth"); }
+    if (res.status === 401 && sent && code === "auth_expired" && session.token === token) { session.clear(); emit("auth"); }
     if (code === "trial_ended" && session.user && session.user.access !== "expired") { session.user.access = "expired"; setTimeout(() => emit("route"), 0); }
     const extra = {}; if (data) for (const k in data) if (k !== "error" && k !== "code") extra[k] = data[k];
     throw new ApiError(res.status, msg, code, extra);
